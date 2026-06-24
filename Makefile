@@ -35,7 +35,7 @@ genkey:
 	go run ./tools/genkey/
 
 sign:
-	go run ./tools/sign/ internal/scan/rules/rules.yaml
+	go run ./tools/sign/ internal/scan/rules/rules.yaml internal/scan/rules/known-malicious.yaml
 
 # Bump version, tag, and push
 # Usage: make bump VERSION=0.2.0

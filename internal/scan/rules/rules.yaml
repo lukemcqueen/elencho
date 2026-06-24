@@ -332,6 +332,33 @@ rules:
     remediation: "Avoid curl|bash in workflows; use pinned action versions"
     fix_command: "uses: actions/checkout@v4"
 
+  - id: known-malicious-npm
+    severity: CRITICAL
+    category: supply-chain
+    description: Dependency matches known malicious npm package
+    detector: known_malicious_npm
+    message: "Known malicious npm package detected"
+    remediation: "Remove the dependency immediately and audit your lockfile"
+    fix_command: "npm uninstall <package> && npm audit"
+
+  - id: known-malicious-pypi
+    severity: CRITICAL
+    category: supply-chain
+    description: Dependency matches known malicious PyPI package
+    detector: known_malicious_pypi
+    message: "Known malicious PyPI package detected"
+    remediation: "Remove the dependency immediately and audit your requirements"
+    fix_command: "pip uninstall <package> -y && pip freeze > requirements.txt"
+
+  - id: known-malicious-go
+    severity: CRITICAL
+    category: supply-chain
+    description: Dependency matches known malicious Go module
+    detector: known_malicious_go
+    message: "Known malicious Go module detected"
+    remediation: "Remove the dependency immediately and verify your go.sum"
+    fix_command: "go mod tidy && go mod verify"
+
   # ── Git ──────────────────────────────────────────────────────────
   - id: git-binary-in-source
     severity: MEDIUM

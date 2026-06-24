@@ -10,19 +10,20 @@ import (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Fprintf(os.Stderr, "Usage: go run ./tools/sign/ <rules.yaml> [version] [private_key.pem]\n")
+	if len(os.Args) < 3 {
+		fmt.Fprintf(os.Stderr, "Usage: go run ./tools/sign/ <rules.yaml> <known-malicious.yaml> [version] [private_key.pem]\n")
 		os.Exit(1)
 	}
 
 	rulesPath := os.Args[1]
+	maliciousPath := os.Args[2]
 	version := "0.1.0-dev"
-	if len(os.Args) > 2 {
-		version = os.Args[2]
+	if len(os.Args) > 3 {
+		version = os.Args[3]
 	}
 	keyPath := "update_private_key.pem"
-	if len(os.Args) > 3 {
-		keyPath = os.Args[3]
+	if len(os.Args) > 4 {
+		keyPath = os.Args[4]
 	}
 
 	// Read private key
@@ -37,23 +38,40 @@ func main() {
 		os.Exit(1)
 	}
 
-	// Read rules file
-	rulesData, err := os.ReadFile(rulesPath)
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "read rules: %v\n", err)
-		os.Exit(1)
-	}
+	// Build manifest with multiple files
+	var files []update.ManifestFile
 
-	hash := sha256.Sum256(rulesData)
-	sha256Hex := hex.EncodeToString(hash[:])
+	for _, path := range []string{rulesPath, maliciousPath} {
+		data, err := os.ReadFile(path)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "read %s: %v\n", path, err)
+			os.Exit(1)
+		}
+		hash := sha256.Sum256(data)
+		sha256Hex := hex.EncodeToString(hash[:])
+
+		// Determine the remote path (relative to repo root)
+		relPath := path
+		// Strip leading ./ or ../internal/scan/... to get the rule-relative path
+		for _, prefix := range []string{"internal/scan/", "./internal/scan/"} {
+			if len(path) >= len(prefix) && path[:len(prefix)] == prefix {
+				relPath = "rules/" + path[len(prefix):]
+				break
+			}
+		}
+
+		files = append(files, update.ManifestFile{
+			Path:   relPath,
+			SHA256: sha256Hex,
+			Size:   int64(len(data)),
+		})
+	}
 
 	manifest := &update.Manifest{
 		Version:      version,
 		RulesVersion: 1,
 		CreatedAt:    "2026-06-24T13:00:00Z",
-		Files: []update.ManifestFile{
-			{Path: "rules/rules.yaml", SHA256: sha256Hex, Size: int64(len(rulesData))},
-		},
+		Files:        files,
 	}
 
 	if err := manifest.Sign(privateKey); err != nil {
@@ -74,5 +92,7 @@ func main() {
 	fmt.Println("Signed manifest written to update-manifest.json")
 	fmt.Printf("  Version:       %s\n", version)
 	fmt.Printf("  Rules version: %d\n", manifest.RulesVersion)
-	fmt.Printf("  SHA256:        %s\n", sha256Hex)
+	for _, f := range manifest.Files {
+		fmt.Printf("  %s: %s (%d bytes)\n", f.Path, f.SHA256, f.Size)
+	}
 }

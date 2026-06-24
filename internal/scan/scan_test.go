@@ -16,8 +16,8 @@ func testdataDir(t *testing.T, subdir string) string {
 // TestRuleRegistry_DefaultRegistry verifies all 25 embedded rules load correctly.
 func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 	reg := DefaultRegistry()
-	if got := reg.RuleCount(); got != 33 {
-		t.Errorf("DefaultRegistry() has %d rules, want 33", got)
+	if got := reg.RuleCount(); got != 36 {
+		t.Errorf("DefaultRegistry() has %d rules, want 36", got)
 	}
 
 	// Verify specific rule IDs exist
@@ -49,6 +49,9 @@ func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 		"python-dynamic-import":       false,
 		"dockerfile-dangerous":        false,
 		"actions-dangerous":           false,
+		"known-malicious-npm":         false,
+		"known-malicious-pypi":        false,
+		"known-malicious-go":          false,
 		"git-binary-in-source":        false,
 		"git-env-in-history":          false,
 		"git-large-recent-add":        false,
@@ -544,8 +547,8 @@ func TestLoadEmbeddedRules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadEmbeddedRules: %v", err)
 	}
-	if len(configs) != 33 {
-		t.Errorf("expected 33 embedded rules, got %d", len(configs))
+	if len(configs) != 36 {
+		t.Errorf("expected 36 embedded rules, got %d", len(configs))
 	}
 
 	// Verify every rule has required fields

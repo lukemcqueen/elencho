@@ -110,6 +110,13 @@ func NewRuleFromConfig(cfg RuleConfig) Rule {
 		return &DockerfileDangerousRule{BaseRule: base, Config: cfg}
 	case "actions_dangerous":
 		return &ActionsDangerousRule{BaseRule: base, Config: cfg}
+	// Malicious dependencies
+	case "known_malicious_npm":
+		return &KnownMaliciousNpmRule{BaseRule: base, Config: cfg}
+	case "known_malicious_pypi":
+		return &KnownMaliciousPyPiRule{BaseRule: base, Config: cfg}
+	case "known_malicious_go":
+		return &KnownMaliciousGoRule{BaseRule: base, Config: cfg}
 	// Git
 	case "git_binary_in_source":
 		return &GitBinaryInSourceRule{BaseRule: base, Config: cfg}
