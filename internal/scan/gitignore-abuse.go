@@ -62,6 +62,13 @@ func (r *GitIgnoredFilePresentRule) Detect(ctx context.Context, scanRoot string,
 			continue
 		}
 
+		// Only report files within the target scan directory
+		fullPath := filepath.Join(gitRoot, line)
+		rel, err := filepath.Rel(scanRoot, fullPath)
+		if err != nil || strings.HasPrefix(rel, "..") {
+			continue
+		}
+
 		findings = append(findings, Finding{
 			Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
 			File: line, Line: 0,

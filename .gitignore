@@ -1,7 +1,7 @@
 # Binaries
-elencho
-elencho-*
-!contrib/homebrew/elencho.rb
+/elencho
+/elencho-*
+!/contrib/homebrew/elencho.rb
 
 # Keys and secrets
 update_private_key.pem

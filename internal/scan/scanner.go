@@ -83,6 +83,19 @@ func (s *Scanner) Scan(ctx context.Context, opts *ScanOptions) (*Findings, error
 		}
 	}
 
+	// Apply inline suppression markers (elencho:ignore)
+	allFindings := findings.All()
+	filtered := FilterSuppressed(allFindings, targetAbs)
+	if len(filtered) != len(allFindings) {
+		findings = NewFindings()
+		for _, f := range filtered {
+			findings.Add(f.Severity, f.Category, f.RuleID, f.File, f.Line, f.Message)
+		}
+		if opts.Verbose {
+			fmt.Fprintf(os.Stderr, "[INFO] Suppressed %d finding(s) via inline markers\n", len(allFindings)-len(filtered))
+		}
+	}
+
 	return findings, nil
 }
 
