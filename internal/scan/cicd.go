@@ -96,8 +96,6 @@ var dockerfileDangerPats = []struct {
 	{"USER root", "Container runs as root — privilege escalation risk"},
 	{"curl | bash", "Downloads and pipes to shell during build"},
 	{"curl | sh", "Downloads and pipes to shell during build"},
-	{"pip install", "pip install in Dockerfile — version pinning recommended"},
-	{"npm install", "npm install in Dockerfile — versions not pinned"},
 	{"wget -O- | bash", "Downloads and pipes to shell during build"},
 }
 

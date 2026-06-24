@@ -315,12 +315,12 @@ rules:
   - id: dockerfile-dangerous
     severity: MEDIUM
     category: container-supply-chain
-    description: Dangerous patterns in Dockerfiles — unverified downloads, root user, unpinned packages
+    description: Dangerous patterns in Dockerfiles — piping unverified downloads to shell, ADD from URLs, root user
     detector: dockerfile_dangerous
     file_names:
       - "Dockerfile"
-    message: "Dangerous pattern in Dockerfile"
-    remediation: "Pin versions, verify checksums, avoid piping unverified content to shell"
+    message: "Dangerous pattern in Dockerfile — reviewing the line"
+    remediation: "Verify the download source, use checksum verification, and avoid running as root"
     fix_command: "RUN curl -fsSL https://example.com/pkg.tar.gz | sha256sum -c pkg.sha256 && tar xzf"
 
   - id: actions-dangerous
