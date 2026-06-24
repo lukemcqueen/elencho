@@ -5,7 +5,7 @@ class Elencho < Formula
   desc "Supply-chain malware and obfuscation scanner"
   homepage "https://github.com/lukemcqueen/elencho"
   license "MIT"
-  version "0.3.1"
+  version "0.3.2"
 
   on_macos do
     if Hardware::CPU.arm?

@@ -2,7 +2,7 @@ package config
 
 // Version is the current version of Elencho.
 // Overridden at build time via -ldflags.
-var Version = "0.3.1"
+var Version = "0.3.2"
 
 // Default constants
 const (
@@ -74,6 +74,6 @@ func DefaultConfig() *Config {
 		MaxFileSize:         DefaultMaxFileSize,
 		DockerMode:          false,
 		DockerImage:         "ubuntu:24.04",
-		ConfidenceThreshold: 0.0,
+		ConfidenceThreshold: 0.5,
 	}
 }
