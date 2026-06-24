@@ -256,6 +256,14 @@ func verifyHardcodedSecret(f *Finding, allLines []string, lineIdx int, filePath 
 		f.Confidence = 0.4
 		return
 	}
+	// Lower confidence for minified or built JS bundles
+	if strings.HasSuffix(filePath, ".min.js") ||
+		strings.Contains(filePath, "/assets/builds/") ||
+		strings.Contains(filePath, "/dist/") ||
+		strings.Contains(filePath, "/build/") {
+		f.Confidence = 0.3
+		return
+	}
 	// Check surrounding lines for env var or config patterns
 	start := lineIdx - 3
 	if start < 0 {
