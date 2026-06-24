@@ -2,20 +2,40 @@
 /elencho
 /elencho-*
 !/contrib/homebrew/elencho.rb
+*.exe
 
 # Keys and secrets
 update_private_key.pem
 *.key
 
+# Build artifacts
+artifacts/
+dist/
+tmp/
+*.log
+*.tar.gz
+*.zip
+
+# Go test / profiling
+*.out
+*.prof
+*.test
+coverage.out
+
+# Go workspace
+go.work
+go.work.sum
+
+# Python (hack scripts)
+__pycache__/
+*.pyc
+
 # Editor / OS
 .DS_Store
 *.swp
 *.swo
-
-# Build artifacts
-artifacts/
-tmp/
-*.log
+.vscode/
+.idea/
 
 # Agent / IDE state
 .agentkore/
