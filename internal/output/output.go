@@ -94,8 +94,6 @@ func formatText(report *Report, verbose bool) (string, error) {
 	}
 
 	// Summary header
-	b.WriteString(fmt.Sprintf("%d total", report.Summary.TotalFindings))
-
 	// Severity breakdown (always shown)
 	parts := make([]string, 0)
 	for _, sev := range []struct {
@@ -109,7 +107,6 @@ func formatText(report *Report, verbose bool) (string, error) {
 		}
 		parts = append(parts, fmt.Sprintf("%d %s", count, sev.label))
 	}
-	b.WriteString(" - ")
 	b.WriteString(strings.Join(parts, ", "))
 
 	// Group findings by (severity, ruleID, message)
