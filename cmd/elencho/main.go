@@ -215,7 +215,7 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 
 	// Format and print output
 	report := output.NewReport(findings)
-	formatted, err := output.FormatReport(report, outputFormat)
+	formatted, err := output.FormatReport(report, outputFormat, cfg.Verbose)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "[ERROR] Formatting output: %v\n", err)
 		os.Exit(1)

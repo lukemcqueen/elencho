@@ -34,7 +34,7 @@ func TestFormatReport_Text(t *testing.T) {
 	findings.Add(scan.SeverityCritical, "remote-execution", "shell-curl-pipe-bash", "evil.sh", 5, "Downloads and pipes to shell")
 
 	report := NewReport(findings)
-	output, err := FormatReport(report, FormatText)
+	output, err := FormatReport(report, FormatText, false)
 	if err != nil {
 		t.Fatalf("FormatReport text: %v", err)
 	}
@@ -49,7 +49,7 @@ func TestFormatReport_JSON(t *testing.T) {
 	findings.Add(scan.SeverityHigh, "secret-leak", "generic-hardcoded-secret", "config.json", 3, "Hardcoded credential")
 
 	report := NewReport(findings)
-	output, err := FormatReport(report, FormatJSON)
+	output, err := FormatReport(report, FormatJSON, false)
 	if err != nil {
 		t.Fatalf("FormatReport json: %v", err)
 	}
@@ -70,7 +70,7 @@ func TestFormatReport_SARIF(t *testing.T) {
 	findings.Add(scan.SeverityLow, "obfuscation", "generic-long-base64", "obfuscated.js", 10, "Long base64 string")
 
 	report := NewReport(findings)
-	output, err := FormatReport(report, FormatSARIF)
+	output, err := FormatReport(report, FormatSARIF, false)
 	if err != nil {
 		t.Fatalf("FormatReport sarif: %v", err)
 	}
@@ -89,7 +89,7 @@ func TestFormatReport_NoFindings(t *testing.T) {
 	findings := scan.NewFindings()
 	report := NewReport(findings)
 
-	text, err := FormatReport(report, FormatText)
+	text, err := FormatReport(report, FormatText, false)
 	if err != nil {
 		t.Fatalf("FormatReport text: %v", err)
 	}
@@ -97,7 +97,7 @@ func TestFormatReport_NoFindings(t *testing.T) {
 		t.Error("text output should contain 'No issues found'")
 	}
 
-	json, err := FormatReport(report, FormatJSON)
+	json, err := FormatReport(report, FormatJSON, false)
 	if err != nil {
 		t.Fatalf("FormatReport json: %v", err)
 	}
@@ -105,7 +105,7 @@ func TestFormatReport_NoFindings(t *testing.T) {
 		t.Errorf("JSON output too short: %d chars", len(json))
 	}
 
-	sarif, err := FormatReport(report, FormatSARIF)
+	sarif, err := FormatReport(report, FormatSARIF, false)
 	if err != nil {
 		t.Fatalf("FormatReport sarif: %v", err)
 	}
@@ -119,7 +119,7 @@ func TestFormatReport_DefaultFormat(t *testing.T) {
 	findings.Add(scan.SeverityMedium, "dependency", "npm-git-dependency", "package.json", 1, "Unpinned git dep")
 
 	report := NewReport(findings)
-	output, err := FormatReport(report, "invalid")
+	output, err := FormatReport(report, "invalid", false)
 	if err != nil {
 		t.Fatalf("FormatReport with invalid format: %v", err)
 	}
