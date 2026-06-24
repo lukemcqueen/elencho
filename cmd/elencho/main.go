@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/lukemcqueen/elencho/internal/config"
@@ -162,6 +163,17 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 					if strings.Contains(string(data), "github.com/lukemcqueen/elencho") {
 						cfg.SelfScan = true
 					}
+				}
+			}
+		}
+
+		// Also check if target dir is the elencho repo (catches absolute paths)
+		if !cfg.SelfScan {
+			gmPath := filepath.Join(cfg.TargetDir, "go.mod")
+			if info, err := os.Stat(gmPath); err == nil && info != nil {
+				data, _ := os.ReadFile(gmPath)
+				if strings.Contains(string(data), "github.com/lukemcqueen/elencho") {
+					cfg.SelfScan = true
 				}
 			}
 		}

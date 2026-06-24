@@ -3,6 +3,7 @@
 /elencho-*
 !/contrib/homebrew/elencho.rb
 *.exe
+checksums.txt
 
 # Keys and secrets
 update_private_key.pem

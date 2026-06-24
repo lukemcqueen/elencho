@@ -75,6 +75,29 @@ func (r *PythonSetupDownloadRule) Detect(ctx context.Context, scanRoot string, f
 	return findings, nil
 }
 
+// Verify implements the Verifier interface for python-setup-download.
+// Lowers confidence for standard ML build patterns and vendored dependencies.
+func (r *PythonSetupDownloadRule) Verify(_ context.Context, _ string, finding *Finding, _ []Finding) error {
+	// Vendor/third-party/site-packages directories — these are bundled deps, not malware
+	if strings.Contains(finding.File, "site-packages") ||
+		strings.Contains(finding.File, "vendor/") ||
+		strings.Contains(finding.File, "third_party") ||
+		strings.Contains(finding.File, "third-party") ||
+		strings.Contains(finding.File, "lib/python") {
+		finding.Confidence = 0.3
+		return nil
+	}
+	// Standard build commands in setup.py — cmake, make, git clone, ninja
+	msg := finding.Message
+	if strings.Contains(msg, "cmake") || strings.Contains(msg, "make ") ||
+		strings.Contains(msg, "ninja") || strings.Contains(msg, "meson") {
+		finding.Confidence = 0.5
+		return nil
+	}
+
+	return nil
+}
+
 // ── Unusual build backends ────────────────────────────────────────────────────
 
 type PythonBuildBackendRule struct {

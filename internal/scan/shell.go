@@ -42,6 +42,31 @@ func (r *ShellCurlPipeBashRule) Detect(ctx context.Context, scanRoot string, fil
 	return findings, nil
 }
 
+// Verify implements the Verifier interface for shell-curl-pipe-bash.
+// Lowers confidence when the pattern is part of an intentional installer:
+// version-pinned releases, or files named install/setup/bootstrap.
+func (r *ShellCurlPipeBashRule) Verify(_ context.Context, _ string, finding *Finding, _ []Finding) error {
+	// Version-pinned URLs from known distribution channels are likely intentional installers.
+	// Matches github.com/org/repo/releases, /v1.2.3/, /releases/tag/ patterns.
+	if strings.Contains(finding.Message, "releases/") ||
+		strings.Contains(finding.Message, "releases/download/") ||
+		versionTagPat.MatchString(finding.Message) {
+		finding.Confidence = 0.5
+		return nil
+	}
+	// Installer/setup/bootstrap scripts wrapping curl|bash are almost always intentional.
+	if strings.Contains(finding.File, "install") ||
+		strings.Contains(finding.File, "setup") ||
+		strings.Contains(finding.File, "bootstrap") {
+		finding.Confidence = 0.4
+		return nil
+	}
+	return nil
+}
+
+// versionTagPat matches pinned version tags like /v1.2.3/ or /v1.2.3-alpha/ or /1.2.3/
+var versionTagPat = regexp.MustCompile(`/v?\d+\.\d+\.\d+[^/]*/`)
+
 // ── Base64 decode → pipe to shell ──────────────────────────────────────────────
 
 type ShellBase64ExecRule struct {
@@ -192,7 +217,8 @@ func (r *ShellReverseShellRule) Detect(ctx context.Context, scanRoot string, fil
 
 // isHealthCheckProbe checks if a line containing /dev/tcp/ is a legitimate
 // TCP connectivity probe rather than a reverse shell.
-// Looks for tell-tale signs: echo > /dev/tcp, until/while loops, sleep/wait, 2>/dev/null
+// Looks for tell-tale signs: echo/<> redirection, until/while loops,
+// sleep/wait, timeout, 2>/dev/null, || true, health-check function context.
 func isHealthCheckProbe(lines []string, lineIdx int) bool {
 	line := lines[lineIdx]
 	trimmed := strings.TrimSpace(line)
@@ -207,13 +233,24 @@ func isHealthCheckProbe(lines []string, lineIdx int) bool {
 		return false
 	}
 
-	// Health check patterns: echo > /dev/tcp/host/port
+	// Pattern 1: echo > /dev/tcp/host/port
 	if strings.HasPrefix(trimmed, "echo ") && strings.Contains(trimmed, "/dev/tcp/") {
 		return true
 	}
 
-	// Check surrounding context (5 lines before for loop indicators)
-	start := lineIdx - 5
+	// Pattern 2: /dev/tcp/ piped to || true (suppress errors — health check idiom)
+	if strings.Contains(trimmed, "|| true") || strings.Contains(trimmed, "||:") {
+		return true
+	}
+
+	// Pattern 3: cat < /dev/null > /dev/tcp/... or <>/dev/tcp/ (bash TCP connection probe)
+	if strings.Contains(trimmed, "<> /dev/tcp/") || strings.Contains(trimmed, "<>/dev/tcp/") ||
+		(strings.Contains(trimmed, "< /dev/null") && strings.Contains(trimmed, "/dev/tcp/")) {
+		return true
+	}
+
+	// Check surrounding context (10 lines before for loop/function/timeout indicators)
+	start := lineIdx - 10
 	if start < 0 {
 		start = 0
 	}
@@ -222,7 +259,10 @@ func isHealthCheckProbe(lines []string, lineIdx int) bool {
 		if strings.HasPrefix(ctxTrimmed, "until ") ||
 			strings.HasPrefix(ctxTrimmed, "while ") ||
 			strings.Contains(ctxTrimmed, "sleep ") ||
-			strings.Contains(ctxTrimmed, "wait ") {
+			strings.Contains(ctxTrimmed, "wait ") ||
+			strings.HasPrefix(ctxTrimmed, "timeout ") ||
+			strings.Contains(ctxTrimmed, "function ") && (strings.Contains(ctxTrimmed, "wait_") || strings.Contains(ctxTrimmed, "health")) ||
+			strings.Contains(ctxTrimmed, "=()") && (strings.Contains(ctxTrimmed, "wait_") || strings.Contains(ctxTrimmed, "health")) {
 			// Verify the line is a probe, not a shell
 			if strings.Contains(trimmed, "2>/dev/null") || strings.Contains(trimmed, "&>/dev/null") {
 				return true
