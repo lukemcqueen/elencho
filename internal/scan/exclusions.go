@@ -19,7 +19,7 @@ type Exclusions struct {
 func NewExclusions(strictMode bool) *Exclusions {
 	return &Exclusions{
 		patterns:         make([]string, 0),
-		builtInExcludes:  []string{".git", "node_modules", "venv", ".venv", "__pycache__", ".cache"},
+		builtInExcludes:  []string{".git", "node_modules", "venv", ".venv", "__pycache__", ".cache", "security-scanner"},
 		selfScanExcludes: []string{},
 		strictMode:       strictMode,
 	}
@@ -77,6 +77,10 @@ func (e *Exclusions) ShouldExclude(path string) bool {
 
 	// Check built-in excludes
 	for _, exclude := range e.builtInExcludes {
+		// Check if path starts with the excluded directory
+		if strings.HasPrefix(path, exclude+"/") || path == exclude {
+			return true
+		}
 		if strings.Contains(path, "/"+exclude+"/") || strings.Contains(path, string(filepath.Separator)+exclude+string(filepath.Separator)) {
 			return true
 		}
