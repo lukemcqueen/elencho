@@ -8,7 +8,7 @@ Elencho (ἔλεγχος — Greek: "exposure, refutation") detects hidden malwa
 
 ## Features
 
-- **30 detection rules** across 7 categories — shell, npm, Python, git, generic, gitignore abuse, secrets
+- **36 detection rules** across 8 categories — shell, npm, Python, git, generic, Docker, CI/CD, secrets
 - **Auto-updates** by default — signed Ed25519 manifests, tamper-proof
 - **Inline suppression** — `elencho:ignore rule-id` comments in source files
 - **Multiple output formats** — text (human), JSON (machines), SARIF 2.1 (CI tools)
@@ -89,24 +89,16 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 
 ## Rules
 
-| ID | Severity | Category | Description |
-|----|----------|----------|-------------|
-| `shell-curl-pipe-bash` | CRITICAL | remote-execution | Downloads and pipes to shell |
-| `shell-base64-exec` | CRITICAL | remote-execution | Base64-decode piped to shell |
-| `shell-reverse-shell` | CRITICAL | remote-execution | Possible reverse shell |
-| `npm-suspicious-script` | CRITICAL | script-execution | Suspicious command in scripts |
-| `generic-hardcoded-secret` | HIGH | secret-leak | Possible hardcoded credential |
-| `generic-gitattributes-filter` | HIGH | git-attributes | Git filter/smudge defined |
-| `npm-postinstall-download` | HIGH | script-execution | Dangerous postinstall downloads remote |
-| `npm-postinstall-eval` | HIGH | script-execution | Postinstall runs inline code |
-| `python-cmdclass` | HIGH | script-execution | setup.py cmdclass arbitrary code |
-| `python-setup-download` | HIGH | script-execution | setup.py network/shell call |
-| `git-env-in-history` | HIGH | secret-leak | .env files committed to git |
-| `git-hook-suspicious` | HIGH | git-hooks | Git hook with network/shell |
-| `dockerfile-suspect` | MEDIUM | container-supply-chain | Potentially unsafe Dockerfile patterns |
-| `actions-suspect` | MEDIUM | ci-cd-security | Potentially unsafe workflow patterns |
+**36 rules** across 16 categories, embedded in the binary via `//go:embed`:
 
-All 36 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
+| Severity | Count |
+|----------|-------|
+| CRITICAL | 8 — remote execution, script injection, supply-chain malware |
+| HIGH     | 8 — secret leaks, obfuscation, git anomalies, build backdoors |
+| MEDIUM   | 15 — suspicious patterns, dependency issues, CI/CD risks |
+| LOW      | 5 — informational, best-practice violations |
+
+See [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) for the full list — canonical source of truth.
 
 ## Exclusion System
 
@@ -216,12 +208,14 @@ internal/
   scan/
     rule.go             ← Rule interface + registry
     rules/
-      rules.yaml        ← Canonical rule definitions (embedded)
+      rules.yaml            ← Canonical rule definitions (embedded)
+      known-malicious.yaml  ← Blocklist of known malicious packages
     rules_loader.go     ← YAML parser + //go:embed + dispatcher
     scanner.go          ← Scan engine (walk, discover, detect)
     finding.go          ← Finding + Severity types
     exclusions.go       ← Exclusion system (.elencho-ignore)
-    {generic,shell,npm,python,git,gitignore-abuse}.go ← Detector implementations
+    suppression.go      ← Inline suppression (elencho:ignore)
+    {generic,shell,npm,python,git,gitignore-abuse,cicd,malicious}.go ← Detectors
   output/
     output.go           ← Text + JSON formatters
     sarif.go            ← SARIF 2.1 formatter
