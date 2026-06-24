@@ -2,7 +2,7 @@ package config
 
 // Version is the current version of Elencho.
 // Overridden at build time via -ldflags.
-var Version = "0.1.0-dev"
+var Version = "0.1.0"
 
 // Default constants
 const (
