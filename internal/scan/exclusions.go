@@ -19,7 +19,7 @@ type Exclusions struct {
 func NewExclusions(strictMode bool) *Exclusions {
 	return &Exclusions{
 		patterns:         make([]string, 0),
-		builtInExcludes:  []string{".git", "node_modules", "venv", ".venv", "__pycache__", ".cache", "security-scanner"},
+		builtInExcludes:  []string{".git", "node_modules", "venv", ".venv", "__pycache__", ".cache", "security-scanner", ".next", "dist", "build", "target", ".serverless", ".terraform", "tmp/cache"},
 		selfScanExcludes: []string{},
 		strictMode:       strictMode,
 	}
