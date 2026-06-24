@@ -101,10 +101,32 @@ func formatText(report *Report) (string, error) {
 	}
 	b.WriteString("\n")
 
-	// Individual findings
+	// Group findings by (severity, ruleID, message) so duplicate rules are merged
+	type groupKey struct {
+		sev     scan.Severity
+		ruleID  string
+		message string
+	}
+	groups := make(map[groupKey][]string) // key → file:line entries
+	order := make([]groupKey, 0)          // insertion order
+
 	for _, f := range report.Findings {
+		key := groupKey{sev: f.Severity, ruleID: f.RuleID, message: f.Message}
+		loc := f.File
+		if f.Line > 0 {
+			loc = fmt.Sprintf("%s:%d", f.File, f.Line)
+		}
+		if _, exists := groups[key]; !exists {
+			order = append(order, key)
+		}
+		groups[key] = append(groups[key], loc)
+	}
+
+	// Render grouped findings
+	for _, key := range order {
+		locs := groups[key]
 		color := ""
-		switch f.Severity {
+		switch key.sev {
 		case scan.SeverityCritical, scan.SeverityHigh:
 			color = "\033[0;31m" // red
 		case scan.SeverityMedium:
@@ -117,10 +139,14 @@ func formatText(report *Report) (string, error) {
 		gray := "\033[0;90m"
 
 		b.WriteString(fmt.Sprintf("%s[%s]%s %s%s%s — %s\n",
-			color, f.Severity, reset,
-			cyan, f.RuleID, reset, f.Message))
-		b.WriteString(fmt.Sprintf("       %s%s:%d%s\n\n",
-			gray, f.File, f.Line, reset))
+			color, key.sev, reset,
+			cyan, key.ruleID, reset, key.message))
+
+		if len(locs) == 1 {
+			b.WriteString(fmt.Sprintf("       %s%s%s\n\n", gray, locs[0], reset))
+		} else {
+			b.WriteString(fmt.Sprintf("       %sFiles: %s%s\n\n", gray, strings.Join(locs, ", "), reset))
+		}
 	}
 
 	return b.String(), nil
