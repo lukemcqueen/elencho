@@ -1,0 +1,33 @@
+#!/bin/bash
+# Pre-push hook: warns if config.Version hasn't been bumped since the last tag.
+# Enable with: git config core.hooksPath .githooks
+
+remote="$1"
+url="$2"
+
+# Only check when pushing to main
+while read local_ref local_sha remote_ref remote_sha; do
+  if [[ "$remote_ref" != "refs/heads/main" ]]; then
+    continue
+  fi
+
+  # Get latest tag and config version
+  latest_tag=$(git describe --tags --abbrev=0 2>/dev/null || echo "v0.0.0")
+  config_version=$(grep '^var Version =' internal/config/config.go | sed 's/.*"\(.*\)".*/\1/')
+  tag_version="${latest_tag#v}"
+
+  if [[ "$config_version" == "$tag_version" ]]; then
+    # Check if we're on a tagged commit
+    commit_tag=$(git tag --points-at HEAD 2>/dev/null)
+    if [[ -z "$commit_tag" ]]; then
+      echo "⚠️  WARNING: config.Version ($config_version) matches latest tag ($latest_tag)"
+      echo "   You may have forgotten to bump the version."
+      echo "   Run: make bump VERSION=<new-version>"
+      echo "   Or update internal/config/config.go manually."
+      echo ""
+      # Warn but don't block — still allow the push
+    fi
+  fi
+done
+
+exit 0

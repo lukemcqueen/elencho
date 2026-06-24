@@ -36,3 +36,23 @@ genkey:
 
 sign:
 	go run ./tools/sign/ internal/scan/rules/rules.yaml
+
+# Bump version, tag, and push
+# Usage: make bump VERSION=0.2.0
+bump:
+	@if [ -z "$(VERSION)" ]; then \
+		echo "Usage: make bump VERSION=0.2.0"; \
+		exit 1; \
+	fi
+	@if echo "$(VERSION)" | grep -q '^[0-9]\+\.[0-9]\+\.[0-9]\+$$'; then \
+		:; \
+	else \
+		echo "Version must be semver (e.g. 0.2.0)"; \
+		exit 1; \
+	fi
+	@sed -i '' 's/^var Version = ".*"/var Version = "$(VERSION)"/' internal/config/config.go
+	@sed -i '' 's/^  version ".*"/  version "$(VERSION)"/' contrib/homebrew/elencho.rb
+	@git add internal/config/config.go contrib/homebrew/elencho.rb
+	@git commit -m "Bump version to $(VERSION)"
+	@git tag -a "v$(VERSION)" -m "Elencho v$(VERSION)"
+	@echo "Bumped to v$(VERSION). Push with: git push origin main --tags"
