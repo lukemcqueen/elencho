@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.2.0 — 2026-06-24
+
+- **36 detection rules** (up from 30) — 6 new rules
+- **3 new CRITICAL rules**: trojan-source, known-malicious-npm, known-malicious-pypi, known-malicious-go
+- **3 new MEDIUM rules**: dockerfile-suspect, actions-suspect
+- **Inline suppression** — `elencho:ignore rule-id` comments in source files
+- **Remediation suggestions** — every finding includes a fix + optional command
+- **Threat intel blocklist** — 20 known-malicious packages, auto-updatable via signed manifests
+- **Auto-update default-on** — Ed25519-signed, opt out with `--no-auto-update`
+- **Noise reduction** — `.next`, `dist`, `build`, `target`, `tmp/cache` excluded by default
+- **Compact output** — grouped findings, severity summary, LOW hidden unless `-v`
+- **Ecosystem comparison** in README — Trivy, Semgrep, Gitleaks, TruffleHog, etc.
+- **Better naming** — `dockerfile-suspect` not `dockerfile-dangerous` (MEDIUM)
+
 ## v0.1.0 — Initial release
 
 - **30 detection rules** across 7 categories — shell, npm, Python, git, generic, gitignore abuse, secrets
