@@ -13,7 +13,7 @@ import (
 	"github.com/lukemcqueen/elencho/internal/update"
 )
 
-var version = "0.1.0-dev"
+var version = config.Version
 
 func main() {
 	cfg := config.DefaultConfig()
