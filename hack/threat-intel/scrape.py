@@ -22,9 +22,9 @@ import time
 import yaml
 
 # ── npm advisory OSV feed ──────────────────────────────────────────────
-NPM_OSV_FEED = "https://osv-vulnerabilities.storage.googleapis.com/npm/all.json"
-PYPI_OSV_FEED = "https://osv-vulnerabilities.storage.googleapis.com/PyPI/all.json"
-GO_OSV_FEED = "https://osv-vulnerabilities.storage.googleapis.com/Go/all.json"
+NPM_OSV_FEED = "https://storage.googleapis.com/osv-vulnerabilities/npm/all.json"
+PYPI_OSV_FEED = "https://storage.googleapis.com/osv-vulnerabilities/PyPI/all.json"
+GO_OSV_FEED = "https://storage.googleapis.com/osv-vulnerabilities/Go/all.json"
 
 # Current known-malicious YAML path
 DEFAULT_OUTPUT = os.path.join(
