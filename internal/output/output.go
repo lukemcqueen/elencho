@@ -161,6 +161,17 @@ func formatText(report *Report, verbose bool) (string, error) {
 		reset := "\033[0m"
 		cyan := "\033[0;36m"
 		gray := "\033[0;90m"
+		green := "\033[0;32m"
+
+		// Get suggestion from the first finding in the group
+		var suggestion, fixCmd string
+		for _, f := range report.Findings {
+			if f.RuleID == key.ruleID {
+				suggestion = f.Suggestion
+				fixCmd = f.FixCommand
+				break
+			}
+		}
 
 		b.WriteString(fmt.Sprintf("\n%s[%s]%s %s%s%s — %s\n",
 			color, key.sev, reset,
@@ -170,6 +181,13 @@ func formatText(report *Report, verbose bool) (string, error) {
 			b.WriteString(fmt.Sprintf("     %s%s%s", gray, locs[0], reset))
 		} else {
 			b.WriteString(fmt.Sprintf("     %sFiles: %s%s", gray, strings.Join(locs, ", "), reset))
+		}
+
+		if suggestion != "" {
+			b.WriteString(fmt.Sprintf("\n     %sfix: %s%s", green, suggestion, reset))
+			if fixCmd != "" {
+				b.WriteString(fmt.Sprintf("\n     %s  $ %s%s", gray, fixCmd, reset))
+			}
 		}
 	}
 

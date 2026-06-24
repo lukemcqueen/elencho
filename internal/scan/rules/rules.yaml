@@ -23,6 +23,7 @@ rules:
       - ".java"
       - ".swift"
     message: "Zero-width Unicode character detected — possible obfuscation"
+    remediation: "Remove zero-width characters or review the affected lines"
 
   - id: generic-long-base64
     severity: LOW
@@ -36,6 +37,7 @@ rules:
       - ".sh"
       - ".rb"
     message: "Unusually long base64 string — verify it's not encoded payload"
+    remediation: "Verify the base64 string is a legitimate data URI, not an encoded payload"
 
   - id: generic-obfuscated-eval
     severity: MEDIUM
@@ -46,6 +48,7 @@ rules:
       - ".js"
       - ".ts"
     message: "Obfuscated eval/exec — likely hidden code execution"
+    remediation: "Replace obfuscated eval with direct function calls"
 
   - id: generic-minified-require
     severity: MEDIUM
@@ -55,6 +58,7 @@ rules:
     file_extensions:
       - ".js"
     message: "Minified file with local requires — verify it's legitimate"
+    remediation: "Review the minified file — use a known package or remove it"
 
   - id: generic-hex-encoded
     severity: MEDIUM
@@ -70,6 +74,7 @@ rules:
       - ".php"
       - ".pl"
     message: "Unusually long hex-encoded string — possible encoded payload"
+    remediation: "Verify the hex string is legitimate; decode and inspect if suspicious"
 
   - id: generic-hardcoded-secret
     severity: HIGH
@@ -86,6 +91,17 @@ rules:
       - ".yaml"
       - ".json"
     message: "Possible hardcoded credential"
+    remediation: "Move secrets to environment variables or a vault"
+    fix_command: "gitleaks detect ."
+
+  - id: generic-trojan-source
+    severity: CRITICAL
+    category: obfuscation
+    description: Bidirectional Unicode override characters — trojan-source attack (CVE-2021-42574)
+    detector: trojan_source
+    message: "Bidirectional Unicode override — trojan-source attack possible"
+    remediation: "Remove bidirectional Unicode override characters — potential trojan-source attack"
+    fix_command: "sed -i 's/\xE2\x80\xAE//g' affected_file"
 
   - id: generic-gitattributes-filter
     severity: HIGH
@@ -95,6 +111,7 @@ rules:
     file_names:
       - ".gitattributes"
     message: "Git filter/smudge defined — can auto-transform files on checkout"
+    remediation: "Review gitattributes filter — can auto-execute code on checkout"
 
   - id: generic-hidden-executable
     severity: MEDIUM
@@ -102,6 +119,8 @@ rules:
     description: Executable file in hidden directory
     detector: hidden_executable
     message: "Executable file in hidden directory"
+    remediation: "Remove the executable or move it to a visible, documented location"
+    fix_command: "git rm --cached hidden_file"
 
   # ── Shell ────────────────────────────────────────────────────────
   - id: shell-curl-pipe-bash
@@ -117,6 +136,8 @@ rules:
       - "Makefile"
       - "Dockerfile"
     message: "Downloads and pipes to shell"
+    remediation: "Replace with version-pinned package download and checksum verification"
+    fix_command: "curl -fsSL https://example.com/pkg.tar.gz | sha256sum -c pkg.sha256 && tar xzf pkg.tar.gz"
 
   - id: shell-base64-exec
     severity: CRITICAL
@@ -131,6 +152,7 @@ rules:
       - "Makefile"
       - "Dockerfile"
     message: "Base64 decode piped to shell — likely staged payload"
+    remediation: "Remove base64-decoded shell execution — verify the payload source"
 
   - id: shell-history-evasion
     severity: MEDIUM
@@ -145,6 +167,7 @@ rules:
       - "Makefile"
       - "Dockerfile"
     message: "Shell history evasion — possible post-exploitation activity"
+    remediation: "Remove history-clearing commands — likely post-exploitation activity"
 
   - id: shell-reverse-shell
     severity: CRITICAL
@@ -159,6 +182,7 @@ rules:
       - "Makefile"
       - "Dockerfile"
     message: "Possible reverse shell"
+    remediation: "Remove the reverse shell — this is a remote access backdoor"
 
   # ── npm ──────────────────────────────────────────────────────────
   - id: npm-postinstall-download
@@ -169,6 +193,8 @@ rules:
     file_names:
       - "package.json"
     message: "Dangerous postinstall script downloads or contacts remote"
+    remediation: "Remove network calls from postinstall scripts or pin the package version"
+    fix_command: "npm audit && npm ls 2>/dev/null"
 
   - id: npm-postinstall-eval
     severity: HIGH
@@ -178,6 +204,8 @@ rules:
     file_names:
       - "package.json"
     message: "Postinstall runs inline code via node -e or require"
+    remediation: "Remove inline code execution from postinstall scripts"
+    fix_command: "npm audit && npm ls 2>/dev/null"
 
   - id: npm-suspicious-script
     severity: CRITICAL
@@ -187,6 +215,7 @@ rules:
     file_names:
       - "package.json"
     message: "Suspicious command in scripts"
+    remediation: "Review the suspicious script — ensure it's not a backdoor"
 
   - id: npmrc-hook
     severity: MEDIUM
@@ -196,6 +225,7 @@ rules:
     file_names:
       - ".npmrc"
     message: ".npmrc contains script hook"
+    remediation: "Remove script hooks from .npmrc if not intentional"
 
   - id: npm-git-dependency
     severity: MEDIUM
@@ -205,6 +235,8 @@ rules:
     file_names:
       - "package.json"
     message: "Unpinned git dependency"
+    remediation: "Pin the git dependency to a specific commit hash"
+    fix_command: "npm install package@github:user/repo#commit"
 
   - id: npm-unpinned-dep
     severity: LOW
@@ -214,6 +246,8 @@ rules:
     file_names:
       - "package.json"
     message: "Unpinned dependency version (* or latest)"
+    remediation: "Pin to a specific semver version instead of * or latest"
+    fix_command: "npm install package@^1.2.3 --save"
 
   # ── Python ───────────────────────────────────────────────────────
   - id: python-cmdclass
@@ -224,6 +258,7 @@ rules:
     file_names:
       - "setup.py"
     message: "setup.py defines cmdclass — can execute arbitrary build code"
+    remediation: "Review cmdclass — can execute arbitrary code during build"
 
   - id: python-setup-download
     severity: HIGH
@@ -233,6 +268,7 @@ rules:
     file_names:
       - "setup.py"
     message: "setup.py calls network or shell command"
+    remediation: "Remove network/shell calls from setup.py"
 
   - id: python-build-backend
     severity: MEDIUM
@@ -243,6 +279,7 @@ rules:
       - "setup.cfg"
       - "pyproject.toml"
     message: "Unusual build backend"
+    remediation: "Use a well-known build backend (setuptools, hatchling, flit, pdm)"
 
   - id: python-custom-index
     severity: MEDIUM
@@ -253,6 +290,8 @@ rules:
       - "pip.conf"
       - "pip.ini"
     message: "Custom pip index (potential dependency confusion)"
+    remediation: "Review custom pip index — verify it's not a dependency confusion attack"
+    fix_command: "pip install --index-url https://pypi.org/simple package"
 
   - id: python-git-dependency
     severity: MEDIUM
@@ -260,6 +299,8 @@ rules:
     description: Unpinned dependency from external source
     detector: python_git_dependency
     message: "Unpinned dependency from external source"
+    remediation: "Pin to a specific version on PyPI instead of git"
+    fix_command: "pip install package==1.2.3"
 
   - id: python-dynamic-import
     severity: MEDIUM
@@ -269,6 +310,27 @@ rules:
     file_extensions:
       - ".py"
     message: "Dynamic module import — common malware loader pattern"
+    remediation: "Replace dynamic __import__() with static imports where possible"
+
+  - id: dockerfile-dangerous
+    severity: MEDIUM
+    category: container-supply-chain
+    description: Dangerous patterns in Dockerfiles — unverified downloads, root user, unpinned packages
+    detector: dockerfile_dangerous
+    file_names:
+      - "Dockerfile"
+    message: "Dangerous pattern in Dockerfile"
+    remediation: "Use multi-stage builds, avoid ADD from URLs, drop root privileges"
+    fix_command: "USER appuser"
+
+  - id: actions-dangerous
+    severity: MEDIUM
+    category: ci-cd-security
+    description: Dangerous patterns in GitHub Actions workflows — remote code execution, token leaks
+    detector: actions_dangerous
+    message: "Dangerous pattern in GitHub Actions workflow"
+    remediation: "Avoid curl|bash in workflows; use pinned action versions"
+    fix_command: "uses: actions/checkout@v4"
 
   # ── Git ──────────────────────────────────────────────────────────
   - id: git-binary-in-source
@@ -277,6 +339,8 @@ rules:
     description: Binary file in source tree — verify intent
     detector: git_binary_in_source
     message: "Binary file in source tree — verify intent"
+    remediation: "Remove binary files from source directories; add to .gitignore"
+    fix_command: "git rm --cached file.bin && echo '*.bin' >> .gitignore"
 
   - id: git-env-in-history
     severity: HIGH
@@ -284,6 +348,8 @@ rules:
     description: Files matching .env* have been committed in git history
     detector: git_env_in_history
     message: "Files matching .env* have been committed in git history — secrets may be exposed"
+    remediation: "Remove .env files from git history using git-filter-repo"
+    fix_command: "git filter-repo --path .env --invert-paths"
 
   - id: git-large-recent-add
     severity: LOW
@@ -291,6 +357,8 @@ rules:
     description: Large file added in recent commits
     detector: git_large_recent_add
     message: "Large file added in recent commits"
+    remediation: "Remove large files from recent commits"
+    fix_command: "git rm large_file && git commit --amend"
 
   - id: git-hook-suspicious
     severity: HIGH
@@ -298,6 +366,7 @@ rules:
     description: Git hook contains network or shell execution
     detector: git_hook_suspicious
     message: "Git hook contains network or shell execution"
+    remediation: "Review git hooks for network/shell execution"
 
   # ── Gitignore Abuse ──────────────────────────────────────────────
   - id: git-ignored-file-present
@@ -306,6 +375,8 @@ rules:
     description: File present on disk but .gitignore'd — potential hiding place
     detector: git_ignored_file_present
     message: "File present on disk but .gitignore'd — potential hiding place for malware"
+    remediation: "Remove the ignored file or un-ignore it if intentional"
+    fix_command: "git add -f file"
 
   - id: dockerignore-mismatch
     severity: LOW
@@ -313,3 +384,6 @@ rules:
     description: Pattern in .dockerignore but not in .gitignore
     detector: dockerignore_mismatch
     message: "Pattern in .dockerignore but not in .gitignore"
+    remediation: "Sync .dockerignore with .gitignore to prevent hidden file leaks"
+    fix_command: "diff .gitignore .dockerignore"
+

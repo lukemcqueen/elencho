@@ -72,6 +72,20 @@ func (r *RuleRegistry) RuleCount() int {
 	return len(r.rules)
 }
 
+// RemediationByRuleID returns a map of rule ID → (remediation, fix_command)
+// from the embedded rule configs.
+func (r *RuleRegistry) RemediationByRuleID() map[string]struct{ Remediation, FixCommand string } {
+	configs, err := LoadEmbeddedRules()
+	if err != nil {
+		return nil
+	}
+	m := make(map[string]struct{ Remediation, FixCommand string })
+	for _, c := range configs {
+		m[c.ID] = struct{ Remediation, FixCommand string }{c.Remediation, c.FixCommand}
+	}
+	return m
+}
+
 // DefaultRegistry creates a registry with all built-in rules loaded
 // from the embedded rules.yaml. This is the canonical rule source.
 func DefaultRegistry() *RuleRegistry {

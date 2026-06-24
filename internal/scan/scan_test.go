@@ -16,8 +16,8 @@ func testdataDir(t *testing.T, subdir string) string {
 // TestRuleRegistry_DefaultRegistry verifies all 25 embedded rules load correctly.
 func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 	reg := DefaultRegistry()
-	if got := reg.RuleCount(); got != 30 {
-		t.Errorf("DefaultRegistry() has %d rules, want 30", got)
+	if got := reg.RuleCount(); got != 33 {
+		t.Errorf("DefaultRegistry() has %d rules, want 33", got)
 	}
 
 	// Verify specific rule IDs exist
@@ -28,6 +28,7 @@ func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 		"generic-minified-require":    false,
 		"generic-hex-encoded":         false,
 		"generic-hardcoded-secret":    false,
+		"generic-trojan-source":       false,
 		"generic-gitattributes-filter": false,
 		"generic-hidden-executable":   false,
 		"shell-curl-pipe-bash":        false,
@@ -46,6 +47,8 @@ func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 		"python-custom-index":         false,
 		"python-git-dependency":       false,
 		"python-dynamic-import":       false,
+		"dockerfile-dangerous":        false,
+		"actions-dangerous":           false,
 		"git-binary-in-source":        false,
 		"git-env-in-history":          false,
 		"git-large-recent-add":        false,
@@ -541,8 +544,8 @@ func TestLoadEmbeddedRules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadEmbeddedRules: %v", err)
 	}
-	if len(configs) != 30 {
-		t.Errorf("expected 30 embedded rules, got %d", len(configs))
+	if len(configs) != 33 {
+		t.Errorf("expected 33 embedded rules, got %d", len(configs))
 	}
 
 	// Verify every rule has required fields

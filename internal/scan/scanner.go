@@ -96,6 +96,16 @@ func (s *Scanner) Scan(ctx context.Context, opts *ScanOptions) (*Findings, error
 		}
 	}
 
+	// Enrich findings with remediation suggestions
+	remediations := s.registry.RemediationByRuleID()
+	allFindings = findings.All()
+	for i, f := range allFindings {
+		if r, ok := remediations[f.RuleID]; ok {
+			allFindings[i].Suggestion = r.Remediation
+			allFindings[i].FixCommand = r.FixCommand
+		}
+	}
+
 	return findings, nil
 }
 

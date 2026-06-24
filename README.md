@@ -8,7 +8,9 @@ Elencho (ἔλεγχος — Greek: "exposure, refutation") detects hidden malwa
 
 ## Features
 
-- **25 detection rules** across 7 categories — shell, npm, Python, git, generic, gitignore abuse, secrets
+- **30 detection rules** across 7 categories — shell, npm, Python, git, generic, gitignore abuse, secrets
+- **Auto-updates** by default — signed Ed25519 manifests, tamper-proof
+- **Inline suppression** — `elencho:ignore rule-id` comments in source files
 - **Multiple output formats** — text (human), JSON (machines), SARIF 2.1 (CI tools)
 - **Ed25519-signed updates** — rule definitions verified by embedded public key
 - **Zero false positives** — proven against clean directories
@@ -90,6 +92,7 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 | ID | Severity | Category | Description |
 |----|----------|----------|-------------|
 | `shell-curl-pipe-bash` | CRITICAL | remote-execution | Downloads and pipes to shell |
+| `shell-base64-exec` | CRITICAL | remote-execution | Base64-decode piped to shell |
 | `shell-reverse-shell` | CRITICAL | remote-execution | Possible reverse shell |
 | `npm-suspicious-script` | CRITICAL | script-execution | Suspicious command in scripts |
 | `generic-hardcoded-secret` | HIGH | secret-leak | Possible hardcoded credential |
@@ -100,9 +103,9 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 | `python-setup-download` | HIGH | script-execution | setup.py network/shell call |
 | `git-env-in-history` | HIGH | secret-leak | .env files committed to git |
 | `git-hook-suspicious` | HIGH | git-hooks | Git hook with network/shell |
-| *(14 more rules — run `elencho --list-rules`)* | | | |
+| *(18 more rules — run `elencho --list-rules`)* | | | |
 
-All 25 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
+All 30 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
 
 ## Exclusion System
 
@@ -124,6 +127,58 @@ Rules are distributed as Ed25519-signed manifests:
 4. **Rollback** — backups kept in `~/.config/elencho/backups/`
 
 The embedded public key is in [internal/update/public_key.go](internal/update/public_key.go).
+
+## How Elencho fits in the ecosystem
+
+Elencho focuses on what other scanners miss: **supply-chain attack patterns, obfuscation, and build-system backdoors**. It's a complementary tool, not a replacement for broader security scanners.
+
+| Tool | Covers | Use Elencho alongside when... |
+|------|--------|-------------------------------|
+| [Trivy](https://github.com/aquasecurity/trivy) | Container vulns, IaC, SBOM, secrets | You need CVE detection and container scanning |
+| [Grype](https://github.com/anchore/grype) | Container vuln scanning | You need lightweight CVE scanning |
+| [Semgrep](https://semgrep.dev) | SAST, Supply Chain (80K+ rules) | You need deep code analysis and a cloud platform |
+| [Gitleaks](https://github.com/gitleaks/gitleaks) | Git secret scanning | You need thorough git history secret detection |
+| [TruffleHog](https://github.com/trufflesecurity/trufflehog) | Secret scanning (git, S3, GCP) | You need multi-backend secret scanning with verification |
+| [ShellCheck](https://www.shellcheck.net) | Shell script static analysis | You need shell syntax and logic checking |
+| [Bandit](https://github.com/PyCQA/bandit) | Python SAST | You need Python-specific security linting |
+| [npm audit](https://docs.npmjs.com/cli/v11/commands/npm-audit) | npm dependency vulns | You need npm advisory checking |
+| **Elencho** | Supply-chain malware, obfuscation, build backdoors | **Complement to all of the above** |
+
+### What Elencho detects that other tools miss
+
+- **Supply-chain malware**: curl|bash, base64-exec, postinstall exploits, reverse shells
+- **Obfuscation**: zero-width Unicode, hex/base64 encoded payloads, minified require
+- **Build backdoors**: cmdclass, unusual build backends, custom pip indexes
+- **Dynamic loading**: `__import__()` and `importlib` malware loader patterns
+- **Git history anomalies**: .env leaks, large binary blobs, suspicious hooks
+- **Hiding places**: .gitignore'd files, .dockerignore mismatches, hidden executables
+- **Shell evasion**: history clearing, HISTFILE manipulation
+
+### For vibe coders / newbie developers
+
+```bash
+# Scan any project directory
+elencho ./your-project
+
+# Auto-updates are ON by default — rules stay current
+# Use --no-auto-update to skip if offline
+elencho --no-auto-update ./project
+
+# Integrate into your workflow
+elencho --json ./project | jq '.findings[] | select(.severity | IN("HIGH","CRITICAL"))'
+
+# Add Elencho to your CI pipeline
+# It exits with code 1 if any HIGH/CRITICAL issue is found
+elencho --strict ./project || echo "Fix security issues before shipping!"
+```
+
+**Don't stop at Elencho.** For production projects, also run:
+```bash
+trivy fs .                          # CVE scanning
+gitleaks detect .                    # Git secret scanning
+shellcheck **/*.sh                   # Shell script linting
+npm audit                            # npm vulnerabilities
+```
 
 ## Development
 

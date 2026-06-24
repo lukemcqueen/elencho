@@ -32,12 +32,14 @@ func IsValidSeverity(s string) bool {
 
 // Finding represents a single detection result from a rule.
 type Finding struct {
-	Severity Severity `json:"severity"`
-	Category string   `json:"category"`
-	RuleID   string   `json:"rule"`
-	File     string   `json:"file"`
-	Line     int      `json:"line"`
-	Message  string   `json:"message"`
+	Severity   Severity `json:"severity"`
+	Category   string   `json:"category"`
+	RuleID     string   `json:"rule"`
+	File       string   `json:"file"`
+	Line       int      `json:"line"`
+	Message    string   `json:"message"`
+	Suggestion string   `json:"suggestion,omitempty"`
+	FixCommand string   `json:"fix_command,omitempty"`
 }
 
 // String returns a human-readable representation of the finding.

@@ -21,6 +21,8 @@ type RuleConfig struct {
 	Extensions  []string `yaml:"file_extensions"`
 	FileNames   []string `yaml:"file_names"`
 	Message     string   `yaml:"message"`
+	Remediation string   `yaml:"remediation"`
+	FixCommand  string   `yaml:"fix_command"`
 }
 
 // ruleFile wraps the top-level YAML structure.
@@ -66,6 +68,8 @@ func NewRuleFromConfig(cfg RuleConfig) Rule {
 		return &GenericGitAttributesRule{BaseRule: base, Config: cfg}
 	case "hidden_executable":
 		return &GenericHiddenExecutableRule{BaseRule: base, Config: cfg}
+	case "trojan_source":
+		return &GenericTrojanSourceRule{BaseRule: base, Config: cfg}
 	// Shell
 	case "curl_pipe_bash":
 		return &ShellCurlPipeBashRule{BaseRule: base, Config: cfg}
@@ -101,6 +105,11 @@ func NewRuleFromConfig(cfg RuleConfig) Rule {
 		return &PythonGitDependencyRule{BaseRule: base, Config: cfg}
 	case "python_dynamic_import":
 		return &PythonDynamicImportRule{BaseRule: base, Config: cfg}
+	// CI/CD
+	case "dockerfile_dangerous":
+		return &DockerfileDangerousRule{BaseRule: base, Config: cfg}
+	case "actions_dangerous":
+		return &ActionsDangerousRule{BaseRule: base, Config: cfg}
 	// Git
 	case "git_binary_in_source":
 		return &GitBinaryInSourceRule{BaseRule: base, Config: cfg}
