@@ -106,10 +106,10 @@ func NewRuleFromConfig(cfg RuleConfig) Rule {
 	case "python_dynamic_import":
 		return &PythonDynamicImportRule{BaseRule: base, Config: cfg}
 	// CI/CD
-	case "dockerfile_dangerous":
-		return &DockerfileDangerousRule{BaseRule: base, Config: cfg}
-	case "actions_dangerous":
-		return &ActionsDangerousRule{BaseRule: base, Config: cfg}
+	case "dockerfile_suspect":
+		return &DockerfileSuspectRule{BaseRule: base, Config: cfg}
+	case "actions_suspect":
+		return &ActionsSuspectRule{BaseRule: base, Config: cfg}
 	// Malicious dependencies
 	case "known_malicious_npm":
 		return &KnownMaliciousNpmRule{BaseRule: base, Config: cfg}

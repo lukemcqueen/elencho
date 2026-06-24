@@ -312,23 +312,23 @@ rules:
     message: "Dynamic module import — common malware loader pattern"
     remediation: "Replace dynamic __import__() with static imports where possible"
 
-  - id: dockerfile-dangerous
+  - id: dockerfile-suspect
     severity: MEDIUM
     category: container-supply-chain
-    description: Dangerous patterns in Dockerfiles — piping unverified downloads to shell, ADD from URLs, root user
-    detector: dockerfile_dangerous
+    description: Potentially unsafe patterns in Dockerfiles — piping unverified downloads to shell, ADD from URLs, root user
+    detector: dockerfile_suspect
     file_names:
       - "Dockerfile"
-    message: "Dangerous pattern in Dockerfile — reviewing the line"
+    message: "Potentially unsafe pattern in Dockerfile — reviewing the line"
     remediation: "Verify the download source, use checksum verification, and avoid running as root"
     fix_command: "RUN curl -fsSL https://example.com/pkg.tar.gz | sha256sum -c pkg.sha256 && tar xzf"
 
-  - id: actions-dangerous
+  - id: actions-suspect
     severity: MEDIUM
     category: ci-cd-security
-    description: Dangerous patterns in GitHub Actions workflows — remote code execution, token leaks
-    detector: actions_dangerous
-    message: "Dangerous pattern in GitHub Actions workflow"
+    description: Potentially unsafe patterns in GitHub Actions workflows — remote code execution, token leaks
+    detector: actions_suspect
+    message: "Potentially unsafe pattern in GitHub Actions workflow"
     remediation: "Avoid curl|bash in workflows; use pinned action versions"
     fix_command: "uses: actions/checkout@v4"
 

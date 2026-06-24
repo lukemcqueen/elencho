@@ -67,7 +67,7 @@ func TestDockerfileDangerousRule(t *testing.T) {
 		t.Fatalf("discoverFiles: %v", err)
 	}
 
-	rule := findRule(reg, "dockerfile-dangerous")
+	rule := findRule(reg, "dockerfile-suspect")
 	findings, err := rule.Detect(ctx, target, files)
 	if err != nil {
 		t.Fatalf("Detect: %v", err)
@@ -98,7 +98,7 @@ func TestDockerfileDangerousRule(t *testing.T) {
 
 // ── GitHub Actions ────────────────────────────────────────────────────────────
 
-func TestActionsDangerousRule(t *testing.T) {
+func TestActionsSuspectRule(t *testing.T) {
 	reg := DefaultRegistry()
 	ctx := t.Context()
 	target := testdataDir(t, "actions-dangerous")
@@ -108,7 +108,7 @@ func TestActionsDangerousRule(t *testing.T) {
 		t.Fatalf("discoverFiles: %v", err)
 	}
 
-	rule := findRule(reg, "actions-dangerous")
+	rule := findRule(reg, "actions-suspect")
 	findings, err := rule.Detect(ctx, target, files)
 	if err != nil {
 		t.Fatalf("Detect: %v", err)

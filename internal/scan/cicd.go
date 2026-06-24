@@ -82,7 +82,8 @@ func containsBytes(haystack, needle []byte) bool {
 
 // ── Dockerfile dangerous patterns ─────────────────────────────────────────────
 
-type DockerfileDangerousRule struct {
+// DockerfileSuspectRule checks Dockerfiles for potentially unsafe patterns.
+type DockerfileSuspectRule struct {
 	BaseRule
 	Config RuleConfig
 }
@@ -99,7 +100,7 @@ var dockerfileDangerPats = []struct {
 	{"wget -O- | bash", "Downloads and pipes to shell during build"},
 }
 
-func (r *DockerfileDangerousRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
+func (r *DockerfileSuspectRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
 	var findings []Finding
 	for _, f := range files {
 		if filepath.Base(f) != "Dockerfile" && !strings.HasSuffix(f, ".dockerfile") {
@@ -141,7 +142,8 @@ func matchesCurlPipe(line, target string) bool {
 
 // ── GitHub Actions abuse ─────────────────────────────────────────────────────
 
-type ActionsDangerousRule struct {
+// ActionsSuspectRule checks GitHub Actions workflows for potentially unsafe patterns.
+type ActionsSuspectRule struct {
 	BaseRule
 	Config RuleConfig
 }
@@ -161,7 +163,7 @@ var actionsDangerPats = []struct {
 	{"uses: docker://", "Action uses Docker container — verify image source"},
 }
 
-func (r *ActionsDangerousRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
+func (r *ActionsSuspectRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
 	var findings []Finding
 	for _, f := range files {
 		if !strings.Contains(f, ".github/workflows/") {

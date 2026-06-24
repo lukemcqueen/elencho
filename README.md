@@ -103,9 +103,10 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 | `python-setup-download` | HIGH | script-execution | setup.py network/shell call |
 | `git-env-in-history` | HIGH | secret-leak | .env files committed to git |
 | `git-hook-suspicious` | HIGH | git-hooks | Git hook with network/shell |
-| *(18 more rules — run `elencho --list-rules`)* | | | |
+| `dockerfile-suspect` | MEDIUM | container-supply-chain | Potentially unsafe Dockerfile patterns |
+| `actions-suspect` | MEDIUM | ci-cd-security | Potentially unsafe workflow patterns |
 
-All 30 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
+All 36 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
 
 ## Exclusion System
 
