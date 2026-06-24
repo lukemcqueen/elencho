@@ -89,25 +89,37 @@ func formatText(report *Report, verbose bool) (string, error) {
 	var b strings.Builder
 
 	if report.Summary.TotalFindings == 0 {
-		b.WriteString("✓ No issues found\n")
+		b.WriteString("no issues found.\n")
 		return b.String(), nil
 	}
 
-	// Summary header
-	// Severity breakdown (always shown)
-	parts := make([]string, 0)
-	for _, sev := range []struct {
-		key   string
-		label string
-	}{{"HIGH", "HIGH"}, {"MEDIUM", "MED"}, {"LOW", "LOW"}} {
-		count := report.Summary.BySeverity[sev.key]
-		// CRITICAL counts as HIGH in display
-		if sev.key == "HIGH" {
-			count += report.Summary.BySeverity["CRITICAL"]
+	// Summary line
+	high := report.Summary.BySeverity["HIGH"] + report.Summary.BySeverity["CRITICAL"]
+	med := report.Summary.BySeverity["MEDIUM"]
+	low := report.Summary.BySeverity["LOW"]
+
+	if high+med == 0 {
+		// Only LOW findings
+		b.WriteString(fmt.Sprintf("no major issues. %d low priority found.", low))
+	} else {
+		// Has HIGH/MEDIUM findings
+		parts := make([]string, 0)
+		if high > 0 {
+			parts = append(parts, fmt.Sprintf("%d high", high))
 		}
-		parts = append(parts, fmt.Sprintf("%d %s", count, sev.label))
+		if med > 0 {
+			parts = append(parts, fmt.Sprintf("%d medium", med))
+		}
+		if low > 0 {
+			last := parts[len(parts)-1]
+			parts[len(parts)-1] = last + " and " + fmt.Sprintf("%d low", low)
+		}
+		plural := "issues"
+		if high+med+low == 1 {
+			plural = "issue"
+		}
+		b.WriteString(strings.Join(parts, ", ") + " priority " + plural + " found.")
 	}
-	b.WriteString(strings.Join(parts, ", "))
 
 	// Group findings by (severity, ruleID, message)
 	type groupKey struct {
