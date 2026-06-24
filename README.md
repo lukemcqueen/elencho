@@ -1,0 +1,183 @@
+# Elencho
+
+**Supply-chain malware and obfuscation scanner**
+
+Elencho (ἔλεγχος — Greek: "exposure, refutation") detects hidden malware, obfuscated code, secret leaks, dependency confusion, and suspicious patterns in source trees before they reach production.
+
+> *"He saved us, not because of works done by us in righteousness, but according to his own mercy"* (Titus 3:5) — We scan not to earn trust, but because we already know the code is suspect.
+
+## Features
+
+- **25 detection rules** across 7 categories — shell, npm, Python, git, generic, gitignore abuse, secrets
+- **Multiple output formats** — text (human), JSON (machines), SARIF 2.1 (CI tools)
+- **Ed25519-signed updates** — rule definitions verified by embedded public key
+- **Zero false positives** — proven against clean directories
+- **Self-scan mode** — scans without flagging its own test fixtures
+- **Exclusion system** — built-in (`.git`, `node_modules`, etc.), `.elencho-ignore` file, CLI `-e` flags, strict mode
+- **Self-contained binary** — all rules embedded via `//go:embed`, no runtime dependencies
+
+## Installation
+
+### From source
+
+```bash
+git clone https://github.com/lukemcqueen/elencho
+cd elencho
+go build -o elencho ./cmd/elencho/
+./elencho --version
+```
+
+### Homebrew
+
+```bash
+brew tap lukemcqueen/elencho
+brew install elencho
+```
+
+### Download binary
+
+Download from the [releases page](https://github.com/lukemcqueen/elencho/releases).
+
+## Quick Start
+
+```bash
+# Scan the current directory
+elencho
+
+# Scan a specific directory with JSON output
+elencho --json /path/to/project
+
+# Use as a CI gate (exit code 1 on HIGH/CRITICAL)
+elencho --strict ./untrusted-repo && echo "No critical issues"
+
+# List all detection rules
+elencho --list-rules
+
+# Self-scan the elencho repo
+elencho --self-scan
+
+# Verify local rule integrity
+elencho --verify
+```
+
+## Usage
+
+```
+Elencho — supply-chain malware and obfuscation scanner
+
+Usage: elencho [options] [directory]
+
+Options:
+  -h, --help            Show this help
+  -v, --verbose         Verbose debug output
+  --json                Output in JSON format
+  --sarif               Output in SARIF 2.1 format
+  --list-rules          List available detection rules and exit
+  --version             Show version
+  --self-scan           Scan this repo itself
+  -e, --exclude GLOB    One-off exclude GLOB (can be repeated)
+  --no-auto-update      Skip online rule update check
+  --update-only         Update rules and exit (no scan)
+  --strict              Ignore .elencho-ignore and --exclude flags
+  --verify              Verify local rule integrity against signed manifest
+  --docker              Run scan inside Docker sandbox (not yet implemented)
+
+Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
+```
+
+## Rules
+
+| ID | Severity | Category | Description |
+|----|----------|----------|-------------|
+| `shell-curl-pipe-bash` | CRITICAL | remote-execution | Downloads and pipes to shell |
+| `shell-reverse-shell` | CRITICAL | remote-execution | Possible reverse shell |
+| `npm-suspicious-script` | CRITICAL | script-execution | Suspicious command in scripts |
+| `generic-hardcoded-secret` | HIGH | secret-leak | Possible hardcoded credential |
+| `generic-gitattributes-filter` | HIGH | git-attributes | Git filter/smudge defined |
+| `npm-postinstall-download` | HIGH | script-execution | Dangerous postinstall downloads remote |
+| `npm-postinstall-eval` | HIGH | script-execution | Postinstall runs inline code |
+| `python-cmdclass` | HIGH | script-execution | setup.py cmdclass arbitrary code |
+| `python-setup-download` | HIGH | script-execution | setup.py network/shell call |
+| `git-env-in-history` | HIGH | secret-leak | .env files committed to git |
+| `git-hook-suspicious` | HIGH | git-hooks | Git hook with network/shell |
+| *(14 more rules — run `elencho --list-rules`)* | | | |
+
+All 25 rules are defined in [internal/scan/rules/rules.yaml](internal/scan/rules/rules.yaml) — the canonical source of truth for the scanner.
+
+## Exclusion System
+
+Elencho supports three levels of exclusion:
+
+1. **Built-in** — `.git`, `node_modules`, `venv`, `.venv`, `__pycache__`, `.cache` (always excluded)
+2. **`.elencho-ignore` file** — place in the scanned directory, one pattern per line, `#` comments
+3. **CLI `-e` flag** — repeatable, one-off exclusions (e.g., `-e '*/build/*'`)
+
+Use `--strict` to ignore user-defined exclusions (useful in CI).
+
+## Update System
+
+Rules are distributed as Ed25519-signed manifests:
+
+1. **Embedded** — core rules ship in the binary via `//go:embed`
+2. **Signed updates** — `elencho --update-only` downloads and verifies signed manifests
+3. **Verification** — `elencho --verify` checks local overlay integrity
+4. **Rollback** — backups kept in `~/.config/elencho/backups/`
+
+The embedded public key is in [internal/update/public_key.go](internal/update/public_key.go).
+
+## Development
+
+### Prerequisites
+
+- Go 1.26+
+
+### Commands
+
+```bash
+make build     # Build binary
+make test      # Run all tests
+make lint      # Run golangci-lint
+make vet       # Run go vet
+make release   # Cross-compile for all targets
+make genkey    # Generate new signing keypair
+make sign      # Sign rules.yaml
+```
+
+### Adding a rule
+
+1. Add the rule definition to `internal/scan/rules/rules.yaml`
+2. Create a corresponding Go detector struct in the `internal/scan/` package
+3. Add a case to `NewRuleFromConfig()` in `internal/scan/rules_loader.go`
+4. Write tests in `internal/scan/scan_test.go`
+5. Test with `make test`
+
+### Architecture
+
+```
+cmd/elencho/main.go     ← CLI entrypoint
+internal/
+  config/config.go      ← Runtime configuration
+  scan/
+    rule.go             ← Rule interface + registry
+    rules/
+      rules.yaml        ← Canonical rule definitions (embedded)
+    rules_loader.go     ← YAML parser + //go:embed + dispatcher
+    scanner.go          ← Scan engine (walk, discover, detect)
+    finding.go          ← Finding + Severity types
+    exclusions.go       ← Exclusion system (.elencho-ignore)
+    {generic,shell,npm,python,git,gitignore-abuse}.go ← Detector implementations
+  output/
+    output.go           ← Text + JSON formatters
+    sarif.go            ← SARIF 2.1 formatter
+  update/
+    manifest.go         ← Manifest type + Ed25519 sign/verify
+    public_key.go       ← Embedded public key
+    download.go         ← HTTP download + apply
+tools/
+  genkey/               ← Key generation tool
+  sign/                 ← Manifest signing tool
+```
+
+## License
+
+MIT

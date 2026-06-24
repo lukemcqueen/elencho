@@ -1,0 +1,315 @@
+# Elencho embedded rule definitions
+# This is the canonical source of truth for all detection rules.
+# Updated rules can be downloaded as signed manifests and overlaid at runtime.
+version: 1
+
+rules:
+  # ── Generic / Cross-cutting ──────────────────────────────────────
+  - id: generic-zero-width-unicode
+    severity: MEDIUM
+    category: obfuscation
+    description: Zero-width Unicode characters in source code — possible obfuscation
+    detector: zero_width_bytes
+    file_extensions:
+      - ".js"
+      - ".ts"
+      - ".py"
+      - ".rb"
+      - ".go"
+      - ".rs"
+      - ".sh"
+      - ".bash"
+      - ".php"
+      - ".java"
+      - ".swift"
+    message: "Zero-width Unicode character detected — possible obfuscation"
+
+  - id: generic-long-base64
+    severity: LOW
+    category: obfuscation
+    description: Unusually long base64 strings — verify it's not encoded payload
+    detector: long_base64
+    file_extensions:
+      - ".js"
+      - ".ts"
+      - ".py"
+      - ".sh"
+      - ".rb"
+    message: "Unusually long base64 string — verify it's not encoded payload"
+
+  - id: generic-obfuscated-eval
+    severity: MEDIUM
+    category: obfuscation
+    description: Obfuscated eval/exec — likely hidden code execution
+    detector: obfuscated_eval
+    file_extensions:
+      - ".js"
+      - ".ts"
+    message: "Obfuscated eval/exec — likely hidden code execution"
+
+  - id: generic-minified-require
+    severity: MEDIUM
+    category: obfuscation
+    description: Minified file with local requires — verify it's legitimate
+    detector: minified_require
+    file_extensions:
+      - ".js"
+    message: "Minified file with local requires — verify it's legitimate"
+
+  - id: generic-hex-encoded
+    severity: MEDIUM
+    category: obfuscation
+    description: Unusually long hex-encoded strings — possible encoded payload
+    detector: hex_encoded
+    file_extensions:
+      - ".js"
+      - ".ts"
+      - ".py"
+      - ".sh"
+      - ".rb"
+      - ".php"
+      - ".pl"
+    message: "Unusually long hex-encoded string — possible encoded payload"
+
+  - id: generic-hardcoded-secret
+    severity: HIGH
+    category: secret-leak
+    description: Possible hardcoded credential — verify this isn't a real key
+    detector: hardcoded_secret
+    file_extensions:
+      - ".js"
+      - ".ts"
+      - ".py"
+      - ".rb"
+      - ".go"
+      - ".yml"
+      - ".yaml"
+      - ".json"
+    message: "Possible hardcoded credential"
+
+  - id: generic-gitattributes-filter
+    severity: HIGH
+    category: git-attributes
+    description: Git filter/smudge defined — can auto-transform files on checkout
+    detector: gitattributes_filter
+    file_names:
+      - ".gitattributes"
+    message: "Git filter/smudge defined — can auto-transform files on checkout"
+
+  - id: generic-hidden-executable
+    severity: MEDIUM
+    category: suspicious-file
+    description: Executable file in hidden directory
+    detector: hidden_executable
+    message: "Executable file in hidden directory"
+
+  # ── Shell ────────────────────────────────────────────────────────
+  - id: shell-curl-pipe-bash
+    severity: CRITICAL
+    category: remote-execution
+    description: Downloads and pipes to shell
+    detector: curl_pipe_bash
+    file_extensions:
+      - ".sh"
+      - ".bash"
+      - ".zsh"
+    file_names:
+      - "Makefile"
+      - "Dockerfile"
+    message: "Downloads and pipes to shell"
+
+  - id: shell-base64-exec
+    severity: CRITICAL
+    category: remote-execution
+    description: Base64-decoded staged payload piped to shell
+    detector: base64_exec
+    file_extensions:
+      - ".sh"
+      - ".bash"
+      - ".zsh"
+    file_names:
+      - "Makefile"
+      - "Dockerfile"
+    message: "Base64 decode piped to shell — likely staged payload"
+
+  - id: shell-history-evasion
+    severity: MEDIUM
+    category: suspicious
+    description: Commands that clear or disable shell history — common post-exploitation
+    detector: history_evasion
+    file_extensions:
+      - ".sh"
+      - ".bash"
+      - ".zsh"
+    file_names:
+      - "Makefile"
+      - "Dockerfile"
+    message: "Shell history evasion — possible post-exploitation activity"
+
+  - id: shell-reverse-shell
+    severity: CRITICAL
+    category: remote-execution
+    description: Possible reverse shell
+    detector: reverse_shell
+    file_extensions:
+      - ".sh"
+      - ".bash"
+      - ".zsh"
+    file_names:
+      - "Makefile"
+      - "Dockerfile"
+    message: "Possible reverse shell"
+
+  # ── npm ──────────────────────────────────────────────────────────
+  - id: npm-postinstall-download
+    severity: HIGH
+    category: script-execution
+    description: Dangerous postinstall script downloads or contacts remote
+    detector: npm_postinstall_download
+    file_names:
+      - "package.json"
+    message: "Dangerous postinstall script downloads or contacts remote"
+
+  - id: npm-postinstall-eval
+    severity: HIGH
+    category: script-execution
+    description: Postinstall runs inline code via node -e or require
+    detector: npm_postinstall_eval
+    file_names:
+      - "package.json"
+    message: "Postinstall runs inline code via node -e or require"
+
+  - id: npm-suspicious-script
+    severity: CRITICAL
+    category: script-execution
+    description: Suspicious command in scripts
+    detector: npm_suspicious_script
+    file_names:
+      - "package.json"
+    message: "Suspicious command in scripts"
+
+  - id: npmrc-hook
+    severity: MEDIUM
+    category: script-execution
+    description: .npmrc contains script hook
+    detector: npmrc_hook
+    file_names:
+      - ".npmrc"
+    message: ".npmrc contains script hook"
+
+  - id: npm-git-dependency
+    severity: MEDIUM
+    category: dependency
+    description: Unpinned git dependency
+    detector: npm_git_dependency
+    file_names:
+      - "package.json"
+    message: "Unpinned git dependency"
+
+  - id: npm-unpinned-dep
+    severity: LOW
+    category: dependency
+    description: Dependency uses '*' or 'latest' as version — supply chain risk
+    detector: npm_unpinned_dep
+    file_names:
+      - "package.json"
+    message: "Unpinned dependency version (* or latest)"
+
+  # ── Python ───────────────────────────────────────────────────────
+  - id: python-cmdclass
+    severity: HIGH
+    category: script-execution
+    description: setup.py defines cmdclass — can execute arbitrary build code
+    detector: python_cmdclass
+    file_names:
+      - "setup.py"
+    message: "setup.py defines cmdclass — can execute arbitrary build code"
+
+  - id: python-setup-download
+    severity: HIGH
+    category: script-execution
+    description: setup.py calls network or shell command
+    detector: python_setup_download
+    file_names:
+      - "setup.py"
+    message: "setup.py calls network or shell command"
+
+  - id: python-build-backend
+    severity: MEDIUM
+    category: script-execution
+    description: Unusual build backend
+    detector: python_build_backend
+    file_names:
+      - "setup.cfg"
+      - "pyproject.toml"
+    message: "Unusual build backend"
+
+  - id: python-custom-index
+    severity: MEDIUM
+    category: dependency
+    description: Custom pip index (potential dependency confusion)
+    detector: python_custom_index
+    file_names:
+      - "pip.conf"
+      - "pip.ini"
+    message: "Custom pip index (potential dependency confusion)"
+
+  - id: python-git-dependency
+    severity: MEDIUM
+    category: dependency
+    description: Unpinned dependency from external source
+    detector: python_git_dependency
+    message: "Unpinned dependency from external source"
+
+  - id: python-dynamic-import
+    severity: MEDIUM
+    category: script-execution
+    description: Dynamic module import via __import__ or importlib — common malware loader pattern
+    detector: python_dynamic_import
+    file_extensions:
+      - ".py"
+    message: "Dynamic module import — common malware loader pattern"
+
+  # ── Git ──────────────────────────────────────────────────────────
+  - id: git-binary-in-source
+    severity: MEDIUM
+    category: binary-artifact
+    description: Binary file in source tree — verify intent
+    detector: git_binary_in_source
+    message: "Binary file in source tree — verify intent"
+
+  - id: git-env-in-history
+    severity: HIGH
+    category: secret-leak
+    description: Files matching .env* have been committed in git history
+    detector: git_env_in_history
+    message: "Files matching .env* have been committed in git history — secrets may be exposed"
+
+  - id: git-large-recent-add
+    severity: LOW
+    category: data-exfiltration
+    description: Large file added in recent commits
+    detector: git_large_recent_add
+    message: "Large file added in recent commits"
+
+  - id: git-hook-suspicious
+    severity: HIGH
+    category: git-hooks
+    description: Git hook contains network or shell execution
+    detector: git_hook_suspicious
+    message: "Git hook contains network or shell execution"
+
+  # ── Gitignore Abuse ──────────────────────────────────────────────
+  - id: git-ignored-file-present
+    severity: LOW
+    category: ignored-artifact
+    description: File present on disk but .gitignore'd — potential hiding place
+    detector: git_ignored_file_present
+    message: "File present on disk but .gitignore'd — potential hiding place for malware"
+
+  - id: dockerignore-mismatch
+    severity: LOW
+    category: docker-supply-chain
+    description: Pattern in .dockerignore but not in .gitignore
+    detector: dockerignore_mismatch
+    message: "Pattern in .dockerignore but not in .gitignore"

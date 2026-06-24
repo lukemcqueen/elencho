@@ -1,0 +1,1 @@
+const encoded = 'VGhpcyBpcyBhIHZlcnkgbG9uZyBiYXNlNjQgc3RyaW5nIHRoYXQgc2hvdWxkIHRyaWdnZXIgdGhlIGxvbmcgYmFzZTY0IGRldGVjdGlvbiBydWxlIGJlY2F1c2UgaXQgaXMgb3ZlciAxMDAgY2hhcmFjdGVycyBsb25nLg==';

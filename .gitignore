@@ -1,0 +1,24 @@
+# Binaries
+elencho
+elencho-*
+!contrib/homebrew/elencho.rb
+
+# Keys and secrets
+update_private_key.pem
+*.key
+
+# Editor / OS
+.DS_Store
+*.swp
+*.swo
+
+# Build artifacts
+artifacts/
+tmp/
+*.log
+
+# Agent / IDE state
+.agentkore/
+.opencode/
+.plan/
+.hermes/

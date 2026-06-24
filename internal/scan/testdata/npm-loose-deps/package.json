@@ -1,0 +1,14 @@
+{
+  "name": "loose-deps",
+  "version": "1.0.0",
+  "dependencies": {
+    "express": "*",
+    "lodash": "latest",
+    "react": "^18.0.0",
+    "axios": "1.2.3"
+  },
+  "devDependencies": {
+    "eslint": "*",
+    "typescript": "5.0.0"
+  }
+}

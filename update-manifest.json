@@ -1,0 +1,13 @@
+{
+  "version": "0.1.0-dev",
+  "rules_version": 1,
+  "created_at": "2026-06-24T13:00:00Z",
+  "files": [
+    {
+      "path": "rules/rules.yaml",
+      "sha256": "bc9c0590f7942844a3d0f646236463956d5aac79823ac0eccca1fe57f66d9d5d",
+      "size": 8372
+    }
+  ],
+  "signature": "aJmG5YrEgsjIMrUEBQV2REl8B5etDkOmeeMFsIE7Lu8E4a722ErOGhqkclu9nRn9NZisAMYAn3klbmXVNM1EBQ=="
+}
