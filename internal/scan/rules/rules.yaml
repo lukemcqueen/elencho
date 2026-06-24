@@ -320,8 +320,8 @@ rules:
     file_names:
       - "Dockerfile"
     message: "Dangerous pattern in Dockerfile"
-    remediation: "Use multi-stage builds, avoid ADD from URLs, drop root privileges"
-    fix_command: "USER appuser"
+    remediation: "Pin versions, verify checksums, avoid piping unverified content to shell"
+    fix_command: "RUN curl -fsSL https://example.com/pkg.tar.gz | sha256sum -c pkg.sha256 && tar xzf"
 
   - id: actions-dangerous
     severity: MEDIUM
