@@ -96,17 +96,21 @@ func formatText(report *Report, verbose bool) (string, error) {
 	// Summary header
 	b.WriteString(fmt.Sprintf("%d total", report.Summary.TotalFindings))
 
-	// Show severity breakdown for non-LOW only
+	// Severity breakdown (always shown)
 	parts := make([]string, 0)
-	for _, sev := range []string{"CRITICAL", "HIGH", "MEDIUM"} {
-		if count, ok := report.Summary.BySeverity[sev]; ok && count > 0 {
-			parts = append(parts, fmt.Sprintf("%s %d", sev, count))
+	for _, sev := range []struct {
+		key   string
+		label string
+	}{{"HIGH", "HIGH"}, {"MEDIUM", "MED"}, {"LOW", "LOW"}} {
+		count := report.Summary.BySeverity[sev.key]
+		// CRITICAL counts as HIGH in display
+		if sev.key == "HIGH" {
+			count += report.Summary.BySeverity["CRITICAL"]
 		}
+		parts = append(parts, fmt.Sprintf("%d %s", count, sev.label))
 	}
-	if len(parts) > 0 {
-		b.WriteString(" - ")
-		b.WriteString(strings.Join(parts, ", "))
-	}
+	b.WriteString(" - ")
+	b.WriteString(strings.Join(parts, ", "))
 
 	// Group findings by (severity, ruleID, message)
 	type groupKey struct {
