@@ -183,7 +183,7 @@ type GenericHardcodedSecretRule struct {
 
 var credPat = regexp.MustCompile(`(?i)(api[_-]?key|apikey|secret[_-]?key|password|passwd|pwd|token)\s*[:=]\s*["']([^"']+)`)
 
-var credSkipWords = []string{"placeholder", "your-", "<YOUR", "your-api", "example", "changeme", "test_", "xxxx", "fake", "dummy", "staging", "demo"}
+var credSkipWords = []string{"placeholder", "your-", "<YOUR", "your-api", "example", "changeme", "test_", "xxxx", "fake", "dummy", "staging", "demo", "${", "$("}
 
 var credExts = []string{".js", ".ts", ".py", ".rb", ".go", ".yml", ".yaml", ".json"}
 
@@ -229,14 +229,46 @@ func (r *GenericHardcodedSecretRule) Detect(ctx context.Context, scanRoot string
 			if len(val) < 8 {
 				continue
 			}
-			findings = append(findings, Finding{
-				Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-				File: f, Line: i + 1,
-				Message: fmt.Sprintf("Possible hardcoded credential: %s", matches[1]),
-			})
+			finding := Finding{
+				Severity:   r.Sev,
+				Category:   r.Cat,
+				RuleID:     r.RuleID,
+				File:       f,
+				Line:       i + 1,
+				Message:    fmt.Sprintf("Possible hardcoded credential: %s", matches[1]),
+				Confidence: 1.0,
+			}
+			// Apply verifier inline for efficiency
+			verifyHardcodedSecret(&finding, lines, i, f)
+			findings = append(findings, finding)
 		}
 	}
 	return findings, nil
+}
+
+// verifyHardcodedSecret adjusts confidence for hardcoded secret findings.
+// Lowers confidence when the value is an env var reference or the file is a fixture.
+func verifyHardcodedSecret(f *Finding, allLines []string, lineIdx int, filePath string) {
+	// Lower confidence if file is in test/fixture/spec directories
+	if strings.Contains(filePath, "/test") || strings.Contains(filePath, "/spec") ||
+		strings.Contains(filePath, "/fixtures") || strings.Contains(filePath, "/mock") ||
+		strings.Contains(filePath, "/example") || strings.Contains(filePath, "docker-compose") {
+		f.Confidence = 0.4
+		return
+	}
+	// Check surrounding lines for env var or config patterns
+	start := lineIdx - 3
+	if start < 0 {
+		start = 0
+	}
+	for _, ctxLine := range allLines[start:lineIdx] {
+		trimmed := strings.TrimSpace(ctxLine)
+		if strings.Contains(trimmed, "${") || strings.Contains(trimmed, "$(") ||
+			strings.Contains(trimmed, "process.env") || strings.Contains(trimmed, ".env.") {
+			f.Confidence = 0.3
+			return
+		}
+	}
 }
 
 // ── .gitattributes filter/smudge ──────────────────────────────────────────────
@@ -255,8 +287,42 @@ func (r *GenericGitAttributesRule) Detect(ctx context.Context, scanRoot string, 
 	}
 	lines := strings.Split(data, "\n")
 	gaPat := regexp.MustCompile(`(?i)(filter|smudge|clean|diff=)`)
+
+	// Known benign patterns — standard git attributes that are not security threats
+	benignPatterns := []string{
+		"* text=auto",
+		"* text eol=lf",
+		"* text eol=crlf",
+		"*.png binary",
+		"*.jpg binary",
+		"*.jpeg binary",
+		"*.gif binary",
+		"*.ico binary",
+		"*.pdf binary",
+		"*.zip binary",
+		"*.jar binary",
+		"*.woff binary",
+		"*.ttf binary",
+		"*.eot binary",
+		"*.svg binary",
+		"*.webp binary",
+		"linguist-generated",
+		"linguist-vendored",
+		"linguist-documentation",
+		"export-ignore",
+	}
+	isBenign := func(line string) bool {
+		trimmed := strings.TrimSpace(line)
+		for _, bp := range benignPatterns {
+			if strings.Contains(trimmed, bp) {
+				return true
+			}
+		}
+		return false
+	}
+
 	for i, line := range lines {
-		if gaPat.MatchString(line) {
+		if gaPat.MatchString(line) && !isBenign(line) {
 			findings = append(findings, Finding{
 				Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
 				File: ".gitattributes", Line: i + 1,

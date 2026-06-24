@@ -163,12 +163,14 @@ func formatText(report *Report, verbose bool) (string, error) {
 		gray := "\033[0;90m"
 		green := "\033[0;32m"
 
-		// Get suggestion from the first finding in the group
+		// Get suggestion and confidence from the first finding in the group
 		var suggestion, fixCmd string
+		lowConf := false
 		for _, f := range report.Findings {
 			if f.RuleID == key.ruleID {
 				suggestion = f.Suggestion
 				fixCmd = f.FixCommand
+				lowConf = f.LowConfidence()
 				break
 			}
 		}
@@ -176,6 +178,10 @@ func formatText(report *Report, verbose bool) (string, error) {
 		b.WriteString(fmt.Sprintf("\n%s[%s]%s %s%s%s — %s\n",
 			color, key.sev, reset,
 			cyan, key.ruleID, reset, key.message))
+
+		if lowConf {
+			b.WriteString(fmt.Sprintf("     %s⚠ Possibly a false positive (file context suggests benign)%s\n", "\033[1;33m", reset))
+		}
 
 		if len(locs) == 1 {
 			b.WriteString(fmt.Sprintf("     %s%s%s", gray, locs[0], reset))

@@ -169,16 +169,66 @@ func (r *ShellReverseShellRule) Detect(ctx context.Context, scanRoot string, fil
 		lines := strings.Split(data, "\n")
 		for i, line := range lines {
 			for _, pat := range reverseShellPats {
-				if strings.Contains(line, pat) || regexp.MustCompile(pat).MatchString(line) {
-					findings = append(findings, Finding{
-						Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-						File: f, Line: i + 1,
-						Message: "Possible reverse shell: " + strings.TrimSpace(line),
-					})
-					break
+				if !(strings.Contains(line, pat) || regexp.MustCompile(pat).MatchString(line)) {
+					continue
 				}
+				// Context check: if the line is a TCP health check probe
+				// (echo > /dev/tcp/... in a until/while/sleep/wait context),
+				// it's not a reverse shell.
+				if pat == "/dev/tcp/" && isHealthCheckProbe(lines, i) {
+					continue
+				}
+				findings = append(findings, Finding{
+					Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
+					File: f, Line: i + 1,
+					Message: "Possible reverse shell: " + strings.TrimSpace(line),
+				})
+				break
 			}
 		}
 	}
 	return findings, nil
+}
+
+// isHealthCheckProbe checks if a line containing /dev/tcp/ is a legitimate
+// TCP connectivity probe rather than a reverse shell.
+// Looks for tell-tale signs: echo > /dev/tcp, until/while loops, sleep/wait, 2>/dev/null
+func isHealthCheckProbe(lines []string, lineIdx int) bool {
+	line := lines[lineIdx]
+	trimmed := strings.TrimSpace(line)
+
+	// Must be a /dev/tcp line
+	if !strings.Contains(trimmed, "/dev/tcp/") {
+		return false
+	}
+
+	// If it's a full reverse shell (bash -i, exec), it's not a health check
+	if strings.Contains(trimmed, "bash -i") || strings.Contains(trimmed, "exec ") {
+		return false
+	}
+
+	// Health check patterns: echo > /dev/tcp/host/port
+	if strings.HasPrefix(trimmed, "echo ") && strings.Contains(trimmed, "/dev/tcp/") {
+		return true
+	}
+
+	// Check surrounding context (5 lines before for loop indicators)
+	start := lineIdx - 5
+	if start < 0 {
+		start = 0
+	}
+	for _, ctxLine := range lines[start:lineIdx] {
+		ctxTrimmed := strings.TrimSpace(ctxLine)
+		if strings.HasPrefix(ctxTrimmed, "until ") ||
+			strings.HasPrefix(ctxTrimmed, "while ") ||
+			strings.Contains(ctxTrimmed, "sleep ") ||
+			strings.Contains(ctxTrimmed, "wait ") {
+			// Verify the line is a probe, not a shell
+			if strings.Contains(trimmed, "2>/dev/null") || strings.Contains(trimmed, "&>/dev/null") {
+				return true
+			}
+		}
+	}
+
+	return false
 }

@@ -25,15 +25,51 @@ var bidiOverrideBytes = [][]byte{
 	{0xE2, 0x80, 0xAC}, // U+202C POP DIRECTIONAL FORMATTING
 }
 
+var bidiSkipExts = map[string]bool{
+	".png": true, ".jpg": true, ".jpeg": true, ".gif": true, ".ico": true,
+	".zip": true, ".jar": true, ".war": true, ".ear": true,
+	".woff": true, ".woff2": true, ".ttf": true, ".eot": true, ".otf": true,
+	".gguf": true, ".bin": true, ".exe": true, ".dll": true, ".so": true,
+	".dylib": true, ".wasm": true, ".o": true, ".a": true, ".lib": true,
+	".pdf": true, ".mp4": true, ".mov": true, ".avi": true, ".webm": true,
+	".mpg": true, ".mpeg": true, ".mkv": true, ".flv": true,
+	".webp": true, ".bmp": true, ".tiff": true, ".tif": true, ".svg": true,
+	".deb": true, ".rpm": true, ".pkg": true, ".dmg": true,
+	".dat": true, ".db": true, ".sqlite": true,
+}
+
+// Verify implements the Verifier interface for Trojan Source.
+// Lowers confidence for minified or built files where unicode sequences
+// are more likely to be encoding artifacts than actual attacks.
+func (r *GenericTrojanSourceRule) Verify(_ context.Context, _ string, finding *Finding, _ []Finding) error {
+	if strings.HasSuffix(finding.File, ".min.js") ||
+		strings.HasSuffix(finding.File, ".min.css") ||
+		strings.Contains(finding.File, "dist/") ||
+		strings.Contains(finding.File, "build/") ||
+		strings.Contains(finding.File, ".next/") ||
+		strings.Contains(finding.File, "compiled/") ||
+		strings.Contains(finding.File, "vendor/") ||
+		strings.Contains(finding.File, "assets/") {
+		finding.Confidence = 0.5
+	}
+	return nil
+}
+
 func (r *GenericTrojanSourceRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
 	var findings []Finding
 	for _, f := range files {
 		ext := strings.ToLower(filepath.Ext(f))
-		// Scan all text files
-		if ext == ".png" || ext == ".jpg" || ext == ".gif" || ext == ".ico" || ext == ".zip" {
+		// Skip binary/media/archive files — they contain bytes that
+		// can incidentally match unicode override sequences
+		if bidiSkipExts[ext] {
 			continue
 		}
-		data, err := ReadFile(filepath.Join(scanRoot, f))
+		// Skip files that appear to be binary (e.g. extensionless executables)
+		filePath := filepath.Join(scanRoot, f)
+		if !IsTextFile(filePath) {
+			continue
+		}
+		data, err := ReadFile(filePath)
 		if err != nil {
 			continue
 		}

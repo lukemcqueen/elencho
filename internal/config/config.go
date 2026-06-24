@@ -52,23 +52,28 @@ type Config struct {
 
 	// DockerImage is the Docker image to use
 	DockerImage string
+
+	// ConfidenceThreshold hides findings below this confidence level (0.0-1.0)
+	// Default 0.0 (show everything). Set to e.g. 0.5 to hide low-confidence findings.
+	ConfidenceThreshold float64
 }
 
 // DefaultConfig returns a Config with sensible defaults.
 func DefaultConfig() *Config {
 	return &Config{
-		TargetDir:     ".",
-		OutputFormat:  "text",
-		Verbose:       false,
-		ListRules:     false,
-		SelfScan:      false,
-		StrictMode:    false,
-		AutoUpdate:    true,
-		UpdateOnly:    false,
-		VerifyRules:   false,
-		ExcludePatterns: []string{},
-		MaxFileSize:   DefaultMaxFileSize,
-		DockerMode:    false,
-		DockerImage:   "ubuntu:24.04",
+		TargetDir:           ".",
+		OutputFormat:        "text",
+		Verbose:             false,
+		ListRules:           false,
+		SelfScan:            false,
+		StrictMode:          false,
+		AutoUpdate:          true,
+		UpdateOnly:          false,
+		VerifyRules:         false,
+		ExcludePatterns:     []string{},
+		MaxFileSize:         DefaultMaxFileSize,
+		DockerMode:          false,
+		DockerImage:         "ubuntu:24.04",
+		ConfidenceThreshold: 0.0,
 	}
 }

@@ -38,14 +38,24 @@ type Finding struct {
 	File       string   `json:"file"`
 	Line       int      `json:"line"`
 	Message    string   `json:"message"`
+	Confidence float64  `json:"confidence"`          // 0.0 (probably FP) → 1.0 (definite finding)
 	Suggestion string   `json:"suggestion,omitempty"`
 	FixCommand string   `json:"fix_command,omitempty"`
 }
 
 // String returns a human-readable representation of the finding.
 func (f *Finding) String() string {
-	return fmt.Sprintf("[%s] %s — %s\n       %s:%d",
-		f.Severity, f.RuleID, f.Message, f.File, f.Line)
+	conf := ""
+	if f.Confidence > 0 && f.Confidence < 1.0 {
+		conf = fmt.Sprintf(" [confidence: %.0f%%]", f.Confidence*100)
+	}
+	return fmt.Sprintf("[%s]%s %s — %s\n       %s:%d",
+		f.Severity, conf, f.RuleID, f.Message, f.File, f.Line)
+}
+
+// LowConfidence returns true if confidence is below the standard threshold (0.5).
+func (f *Finding) LowConfidence() bool {
+	return f.Confidence > 0 && f.Confidence < 0.5
 }
 
 // Findings is a collection of findings with severity-level tracking.
@@ -67,6 +77,20 @@ func (f *Findings) Add(sev Severity, category, ruleID, file string, line int, me
 		File:     file,
 		Line:     line,
 		Message:  message,
+		Confidence: 1.0,
+	})
+}
+
+// AddWithConfidence appends a finding with an explicit confidence value.
+func (f *Findings) AddWithConfidence(sev Severity, category, ruleID, file string, line int, message string, confidence float64) {
+	f.items = append(f.items, Finding{
+		Severity:   sev,
+		Category:   category,
+		RuleID:     ruleID,
+		File:       file,
+		Line:       line,
+		Message:    message,
+		Confidence: confidence,
 	})
 }
 

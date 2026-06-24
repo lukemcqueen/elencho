@@ -28,6 +28,9 @@ func TestDefaultConfig(t *testing.T) {
 	if cfg.DockerImage != "ubuntu:24.04" {
 		t.Errorf("expected DockerImage='ubuntu:24.04', got '%s'", cfg.DockerImage)
 	}
+	if cfg.ConfidenceThreshold != 0.0 {
+		t.Errorf("expected ConfidenceThreshold=0.0, got %.2f", cfg.ConfidenceThreshold)
+	}
 }
 
 func TestDefaultConfigFlags(t *testing.T) {

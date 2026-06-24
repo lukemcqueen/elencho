@@ -9,8 +9,10 @@ Elencho (ἔλεγχος — Greek: "exposure, refutation") detects hidden malwa
 ## Features
 
 - **36 detection rules** across 8 categories — shell, npm, Python, git, generic, Docker, CI/CD, secrets
-- **Auto-updates** by default — signed Ed25519 manifests, tamper-proof
+- **Confidence scoring** — each finding scored 0.0-1.0; low-confidence findings tagged with ⚠ warning; `--min-confidence` flag filters by threshold
+- **Smart false-positive reduction** — env var refs (`${VAR}`) in credentials skipped; binary files excluded from trojan-source; TCP health checks distinguished from reverse shells; version-aware malicious package matching
 - **Inline suppression** — `elencho:ignore rule-id` comments in source files
+- **Auto-updates** by default — signed Ed25519 manifests, tamper-proof
 - **Multiple output formats** — text (human), JSON (machines), SARIF 2.1 (CI tools)
 - **Ed25519-signed updates** — rule definitions verified by embedded public key
 - **Zero false positives** — proven against clean directories

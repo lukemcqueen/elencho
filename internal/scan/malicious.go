@@ -114,22 +114,26 @@ func (r *KnownMaliciousNpmRule) Detect(ctx context.Context, scanRoot string, fil
 		if err := json.Unmarshal([]byte(data), &pkg); err != nil {
 			continue
 		}
-		for name := range pkg.Dependencies {
+		for name, rawRange := range pkg.Dependencies {
 			if mp, ok := npmMalicious[name]; ok {
-				findings = append(findings, Finding{
-					Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-					File: f, Line: 0,
-					Message: "Known malicious npm package: " + name + " — " + mp.Notes,
-				})
+				if isMaliciousVersion(mp, normalizeNpmVersion(rawRange)) {
+					findings = append(findings, Finding{
+						Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
+						File: f, Line: 0,
+						Message: "Known malicious npm package: " + name + " — " + mp.Notes,
+					})
+				}
 			}
 		}
-		for name := range pkg.DevDependencies {
+		for name, rawRange := range pkg.DevDependencies {
 			if mp, ok := npmMalicious[name]; ok {
-				findings = append(findings, Finding{
-					Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-					File: f, Line: 0,
-					Message: "Known malicious npm package (dev): " + name + " — " + mp.Notes,
-				})
+				if isMaliciousVersion(mp, normalizeNpmVersion(rawRange)) {
+					findings = append(findings, Finding{
+						Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
+						File: f, Line: 0,
+						Message: "Known malicious npm package (dev): " + name + " — " + mp.Notes,
+					})
+				}
 			}
 		}
 	}
@@ -154,10 +158,12 @@ func (r *KnownMaliciousPyPiRule) Detect(ctx context.Context, scanRoot string, fi
 			if line == "" || strings.HasPrefix(line, "#") || strings.HasPrefix(line, "-") || strings.HasPrefix(line, "[") {
 				continue
 			}
-			// Extract package name before any version specifier
+			// Extract package name and version before any version specifier
 			name := line
+			version := ""
 			for _, sep := range []string{"==", ">=", "<=", ">", "<", "~=", "!="} {
 				if idx := strings.Index(name, sep); idx >= 0 {
+					version = strings.TrimSpace(name[idx+len(sep):])
 					name = strings.TrimSpace(name[:idx])
 					break
 				}
@@ -168,11 +174,17 @@ func (r *KnownMaliciousPyPiRule) Detect(ctx context.Context, scanRoot string, fi
 			}
 			name = strings.ToLower(name)
 			if mp, ok := pypiMalicious[name]; ok {
-				findings = append(findings, Finding{
-					Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-					File: f, Line: i + 1,
-					Message: "Known malicious PyPI package: " + name + " — " + mp.Notes,
-				})
+				// Skip if it's a typosquat alias_of and the dep name matches the legitimate package
+				if mp.AliasOf != "" && strings.EqualFold(name, mp.AliasOf) {
+					continue
+				}
+				if isMaliciousVersion(mp, version) {
+					findings = append(findings, Finding{
+						Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
+						File: f, Line: i + 1,
+						Message: "Known malicious PyPI package: " + name + " — " + mp.Notes,
+					})
+				}
 			}
 		}
 	}
@@ -200,15 +212,56 @@ func (r *KnownMaliciousGoRule) Detect(ctx context.Context, scanRoot string, file
 			fields := strings.Fields(line)
 			if len(fields) >= 2 && strings.HasPrefix(fields[0], "github.com/") {
 				mod := fields[0]
+				version := fields[1]
 				if mp, ok := goMalicious[mod]; ok {
-					findings = append(findings, Finding{
-						Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
-						File: f, Line: i + 1,
-						Message: "Known malicious Go module: " + mod + " — " + mp.Notes,
-					})
+					if mp.AliasOf != "" && mod == mp.AliasOf {
+						continue
+					}
+					if isMaliciousVersion(mp, version) {
+						findings = append(findings, Finding{
+							Severity: r.Sev, Category: r.Cat, RuleID: r.RuleID,
+							File: f, Line: i + 1,
+							Message: "Known malicious Go module: " + mod + " — " + mp.Notes,
+						})
+					}
 				}
 			}
 		}
 	}
 	return findings, nil
+}
+
+// isMaliciousVersion checks if a dependency version matches the known-malicious entry.
+// If the blocklist specifies versions, the dep must be in that list.
+// If the blocklist has no versions, any version matches (name-based detection).
+// Returns false if the dep name matches alias_of (legitimate package, not the typosquat).
+func isMaliciousVersion(mp MaliciousPackage, version string) bool {
+	// Skip if this is a typosquat alias and the dep name IS the alias target
+	if mp.AliasOf != "" && strings.EqualFold(mp.Name, mp.AliasOf) {
+		return false
+	}
+	// No versions listed → name-based detection only
+	if len(mp.Versions) == 0 {
+		return true
+	}
+	// Version-specific: only flag if installed version matches a malicious version
+	for _, mv := range mp.Versions {
+		if strings.EqualFold(version, mv) {
+			return true
+		}
+	}
+	return false
+}
+
+// normalizeNpmVersion strips semver range prefixes from npm version strings.
+// "^1.2.3" → "1.2.3", "~1.2.3" → "1.2.3", ">=1.2.3" → "1.2.3"
+func normalizeNpmVersion(raw string) string {
+	raw = strings.TrimSpace(raw)
+	for _, prefix := range []string{"^", "~", ">=", "<=", ">", "<", "="} {
+		if strings.HasPrefix(raw, prefix) {
+			raw = strings.TrimSpace(raw[len(prefix):])
+			break
+		}
+	}
+	return raw
 }

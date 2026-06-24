@@ -150,12 +150,13 @@ func (e *Exclusions) WalkFunc() func(path string, info os.FileInfo, err error) e
 
 // ScanOptions holds options for a scan run.
 type ScanOptions struct {
-	TargetDir   string
-	Exclusions  *Exclusions
-	Verbose     bool
-	StrictMode  bool
-	SelfScan    bool
-	MaxFileSize int64 // maximum file size to scan in bytes (0 = no limit)
+	TargetDir           string
+	Exclusions          *Exclusions
+	Verbose             bool
+	StrictMode          bool
+	SelfScan            bool
+	MaxFileSize         int64   // maximum file size to scan in bytes (0 = no limit)
+	ConfidenceThreshold float64 // 0.0-1.0; findings below this confidence are excluded
 }
 
 // DefaultScanOptions returns scan options with sensible defaults.

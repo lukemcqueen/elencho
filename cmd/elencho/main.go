@@ -32,6 +32,7 @@ func main() {
 	verifyRules := flag.Bool("verify", false, "Verify local rule integrity against CHECKSUMS")
 	dockerMode := flag.Bool("docker", false, "Run scan inside Docker sandbox")
 	dockerImage := flag.String("docker-image", "ubuntu:24.04", "Docker image to use with --docker")
+	confidenceThreshold := flag.Float64("min-confidence", 0.0, "Minimum confidence threshold (0.0-1.0); findings below this are hidden")
 
 	var excludeFlags multiFlag
 	flag.Var(&excludeFlags, "e", "One-off exclude GLOB (can be repeated)")
@@ -48,7 +49,7 @@ Options:
   -v, --verbose         Verbose debug output
   --json                Output in JSON format
   --sarif               Output in SARIF 2.1 format
-  --list-rules          List available detection rules and exit
+  --list-rules          List all detection rules and exit
   --version             Show version
   --self-scan           Scan this repo itself
   -e, --exclude GLOB    One-off exclude GLOB (can be repeated)
@@ -58,6 +59,7 @@ Options:
   --verify              Verify local rule integrity against CHECKSUMS
   --docker              Run scan inside Docker sandbox
   --docker-image IMG    Docker image to use with --docker
+  --min-confidence VAL  Minimum confidence threshold 0.0-1.0 (default 0.0 = show all)
 
 Examples:
   elencho                                           Scan current directory
@@ -66,6 +68,7 @@ Examples:
   elencho --list-rules                              List all detection rules
   elencho --self-scan                               Self-scan with safe exclusions
   elencho --strict ./untrusted-repo                 CI-scan untrusted fork
+  elencho --min-confidence 0.5 ./repo               Only high-confidence findings
   elencho -e '*/build/*' -e '*/dist/*'              Exclude build/dist dirs
 
 Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
@@ -102,6 +105,7 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 	cfg.VerifyRules = *verifyRules
 	cfg.DockerMode = *dockerMode
 	cfg.DockerImage = *dockerImage
+	cfg.ConfidenceThreshold = *confidenceThreshold
 	cfg.ExcludePatterns = []string(excludeFlags)
 
 	if *jsonOutput {
@@ -191,6 +195,7 @@ Exit code: 0 if no issues found, 1 if any HIGH/CRITICAL findings exist.
 	scanOpts.Verbose = cfg.Verbose
 	scanOpts.StrictMode = cfg.StrictMode
 	scanOpts.SelfScan = cfg.SelfScan
+	scanOpts.ConfidenceThreshold = cfg.ConfidenceThreshold
 
 	// Add CLI exclusions
 	for _, pattern := range cfg.ExcludePatterns {

@@ -83,6 +83,42 @@ func (s *Scanner) Scan(ctx context.Context, opts *ScanOptions) (*Findings, error
 		}
 	}
 
+	// Run verification pass: let rules re-evaluate their findings in context.
+	// Only called for findings that still have default confidence (1.0),
+	// i.e., rules that didn't already adjust confidence during Detect().
+	allRaw := findings.All()
+	for i := range allRaw {
+		if allRaw[i].Confidence < 1.0 {
+			continue // already verified inline
+		}
+		for _, rule := range rules {
+			if rule.ID() != allRaw[i].RuleID {
+				continue
+			}
+			if v, ok := rule.(Verifier); ok {
+				if err := v.Verify(ctx, targetAbs, &allRaw[i], allRaw); err != nil {
+					if opts.Verbose {
+						fmt.Fprintf(os.Stderr, "[WARN] Verifier %s error: %v\n", rule.ID(), err)
+					}
+				}
+			}
+			break
+		}
+	}
+	// Rebuild findings with any modifications from verifiers
+	findings = NewFindings()
+	for _, f := range allRaw {
+		// Skip findings below the confidence threshold (unless threshold is 0 = show all)
+		if opts.ConfidenceThreshold > 0 && f.Confidence < opts.ConfidenceThreshold {
+			if opts.Verbose {
+				fmt.Fprintf(os.Stderr, "[DEBUG] Filtered low-confidence finding: %s (%s:%d, confidence=%.2f)\n",
+					f.RuleID, f.File, f.Line, f.Confidence)
+			}
+			continue
+		}
+		findings.AddWithConfidence(f.Severity, f.Category, f.RuleID, f.File, f.Line, f.Message, f.Confidence)
+	}
+
 	// Apply inline suppression markers (elencho:ignore)
 	allFindings := findings.All()
 	filtered := FilterSuppressed(allFindings, targetAbs)

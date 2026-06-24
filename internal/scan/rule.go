@@ -25,6 +25,16 @@ type Rule interface {
 	Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error)
 }
 
+// Verifier is an optional interface that rules can implement to re-evaluate
+// their own findings with full file context and adjust confidence.
+// Called after Detect() for each finding the rule produced.
+// scanRoot is the absolute path of the scanned directory.
+// finding points to the finding (can be modified in-place).
+// allFindings is the complete findings list from all rules (read-only context).
+type Verifier interface {
+	Verify(ctx context.Context, scanRoot string, finding *Finding, allFindings []Finding) error
+}
+
 // BaseRule provides common fields and methods for rules.
 type BaseRule struct {
 	RuleID      string
