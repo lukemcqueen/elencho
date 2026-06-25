@@ -10,6 +10,7 @@ linters:
     - misspell
   disable:
     - lll  # long lines — not useful for this project
+    - typecheck  # binary built with Go 1.24, incompatible with Go 1.26 stdlib
 
 run:
   timeout: 5m
