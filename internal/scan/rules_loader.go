@@ -131,6 +131,12 @@ func NewRuleFromConfig(cfg RuleConfig) Rule {
 		return &GitIgnoredFilePresentRule{BaseRule: base, Config: cfg}
 	case "dockerignore_mismatch":
 		return &DockerignoreMismatchRule{BaseRule: base, Config: cfg}
+	// npm Phantom Dependency
+	case "npm_phantom_dependency":
+		return &NpmPhantomDependencyRule{BaseRule: base, Config: cfg}
+	// AI Config Persistence
+	case "ai_config_persistence":
+		return &AiConfigPersistenceRule{BaseRule: base, Config: cfg}
 	default:
 		// Fallback: return a basic rule that logs the unknown detector
 		return &genericFallbackRule{BaseRule: base, detector: cfg.Detector}

@@ -414,3 +414,24 @@ rules:
     remediation: "Sync .dockerignore with .gitignore to prevent hidden file leaks"
     fix_command: "diff .gitignore .dockerignore"
 
+  # ── npm Phantom Dependency (axios attack pattern) ───────────────
+  - id: npm-phantom-dependency
+    severity: HIGH
+    category: supply-chain
+    description: Dependency declared in package.json but never imported in any source file — possible malware vector (axios plain-crypto-js pattern)
+    detector: npm_phantom_dependency
+    file_names:
+      - "package.json"
+    message: "Phantom dependency declared but never imported — possible malware vector"
+    remediation: "Remove the dependency if it's not used; verify it's not a phantom malware package"
+    fix_command: "npm uninstall <package> && npm audit"
+
+  # ── AI Tool Config Persistence (Miasma worm pattern) ────────────
+  - id: ai-config-persistence
+    severity: MEDIUM
+    category: persistence
+    description: AI coding tool config file with executable content — possible persistence vector (Miasma worm targeting Claude Code, Cursor, VS Code)
+    detector: ai_config_persistence
+    message: "AI tool config with auto-execution capability — possible persistence vector"
+    remediation: "Review AI config files for shell execution or auto-run commands"
+

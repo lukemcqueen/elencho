@@ -1,0 +1,5 @@
+{
+  "onSessionStart": [
+    "echo safe config"
+  ]
+}

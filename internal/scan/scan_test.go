@@ -13,11 +13,11 @@ func testdataDir(t *testing.T, subdir string) string {
 	return filepath.Join("testdata", subdir)
 }
 
-// TestRuleRegistry_DefaultRegistry verifies all 25 embedded rules load correctly.
+// TestRuleRegistry_DefaultRegistry verifies all 38 embedded rules load correctly.
 func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 	reg := DefaultRegistry()
-	if got := reg.RuleCount(); got != 36 {
-		t.Errorf("DefaultRegistry() has %d rules, want 36", got)
+	if got := reg.RuleCount(); got != 38 {
+		t.Errorf("DefaultRegistry() has %d rules, want 38", got)
 	}
 
 	// Verify specific rule IDs exist
@@ -58,6 +58,8 @@ func TestRuleRegistry_DefaultRegistry(t *testing.T) {
 		"git-hook-suspicious":         false,
 		"git-ignored-file-present":    false,
 		"dockerignore-mismatch":       false,
+		"npm-phantom-dependency":        false,
+		"ai-config-persistence":         false,
 	}
 
 	for _, rule := range reg.Rules() {
@@ -547,8 +549,8 @@ func TestLoadEmbeddedRules(t *testing.T) {
 	if err != nil {
 		t.Fatalf("LoadEmbeddedRules: %v", err)
 	}
-	if len(configs) != 36 {
-		t.Errorf("expected 36 embedded rules, got %d", len(configs))
+	if len(configs) != 38 {
+		t.Errorf("expected 38 embedded rules, got %d", len(configs))
 	}
 
 	// Verify every rule has required fields
@@ -1052,6 +1054,12 @@ func TestScannerWithVariousDirs(t *testing.T) {
 		{"npm-loose-deps", testdataDir(t, "npm-loose-deps"), 2, -1},
 		{"python-malware", testdataDir(t, "python-malware"), 4, -1},
 		{"obfuscation", testdataDir(t, "obfuscation"), 3, -1},
+		{"npm-phantom-dependency", testdataDir(t, "npm-phantom-dependency"), 1, -1},
+		{"npm-clean-imports", testdataDir(t, "npm-clean-imports"), 0, 0},
+		{"npm-plugin-deps", testdataDir(t, "npm-plugin-deps"), 0, 0},
+		{"npm-phantom-with-postinstall", testdataDir(t, "npm-phantom-with-postinstall"), 1, -1},
+		{"ai-persistence", testdataDir(t, "ai-persistence"), 2, -1},
+		{"ai-legitimate-tasks", testdataDir(t, "ai-legitimate-tasks"), 0, -1},
 		{"clean", testdataDir(t, "clean"), 0, 0},
 	}
 
