@@ -15,6 +15,7 @@ run:
   timeout: 5m
   issues-exit-code: 1
   tests: true
+  go: "1.24"
 
 issues:
   exclude-rules:
