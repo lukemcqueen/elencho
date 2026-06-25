@@ -17,17 +17,17 @@ var knownMaliciousData []byte
 
 // MaliciousPackage describes a known-malicious package entry.
 type MaliciousPackage struct {
-	Name       string `yaml:"name" json:"name"`
-	Ecosystem  string `yaml:"ecosystem" json:"ecosystem"`
+	Name       string   `yaml:"name" json:"name"`
+	Ecosystem  string   `yaml:"ecosystem" json:"ecosystem"`
 	Versions   []string `yaml:"versions" json:"versions,omitempty"`
-	AliasOf    string `yaml:"alias_of" json:"alias_of,omitempty"`
-	Notes      string `yaml:"notes" json:"notes"`
-	Discovered string `yaml:"discovered" json:"discovered,omitempty"`
+	AliasOf    string   `yaml:"alias_of" json:"alias_of,omitempty"`
+	Notes      string   `yaml:"notes" json:"notes"`
+	Discovered string   `yaml:"discovered" json:"discovered,omitempty"`
 }
 
 // maliciousFile wraps the YAML structure.
 type maliciousFile struct {
-	Version  int               `yaml:"version"`
+	Version  int                `yaml:"version"`
 	Packages []MaliciousPackage `yaml:"packages"`
 }
 

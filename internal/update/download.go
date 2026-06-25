@@ -1,8 +1,8 @@
 package update
 
 import (
-	"crypto/sha256"
 	"crypto/ed25519"
+	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
 	"io"
@@ -43,7 +43,7 @@ func BackupDir() (string, error) {
 // Returns the manifest if an update is available, or nil if already current.
 func CheckForUpdate(baseURL string, currentVersion int) (*Manifest, error) {
 	manifestURL := baseURL + "/update-manifest.json"
-	
+
 	client := &http.Client{Timeout: 15 * time.Second}
 	resp, err := client.Get(manifestURL)
 	if err != nil {

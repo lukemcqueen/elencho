@@ -15,16 +15,16 @@ func TestKnownMaliciousPackages(t *testing.T) {
 	// Verify key npm malicious packages are present
 	npmChecks := map[string]bool{
 		// Classic entries that should always be present
-		"colors":        false,
-		"faker.js":      false,
-		"event-stream":  false,
-		"ua-parser-js":  false,
+		"colors":       false,
+		"faker.js":     false,
+		"event-stream": false,
+		"ua-parser-js": false,
 		// 2025-2026 supply-chain campaigns
-		"axios":                     false,
-		"plain-crypto-js":           false,
-		"@ctrl/tinycolor":           false,
-		"@redhat-cloud-services/types": false,
-		"opensearch-setup":          false,
+		"axios":                              false,
+		"plain-crypto-js":                    false,
+		"@ctrl/tinycolor":                    false,
+		"@redhat-cloud-services/types":       false,
+		"opensearch-setup":                   false,
 		"@cloudplatform-single-spa/svp-baas": false,
 	}
 

@@ -37,10 +37,10 @@ type Verifier interface {
 
 // BaseRule provides common fields and methods for rules.
 type BaseRule struct {
-	RuleID      string
-	Sev         Severity
-	Cat         string
-	Desc        string
+	RuleID string
+	Sev    Severity
+	Cat    string
+	Desc   string
 }
 
 // ID returns the rule identifier.
@@ -146,7 +146,6 @@ func fallbackRegistry() *RuleRegistry {
 
 	return reg
 }
-
 
 // GlobMatcher checks if a file path matches a glob pattern.
 // Supports patterns like "*.sh", "**/*.py", etc.
