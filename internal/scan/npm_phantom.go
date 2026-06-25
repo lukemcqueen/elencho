@@ -77,10 +77,15 @@ var knownSafePhantomDeps = map[string]bool{
 	"expo": true, "expo-cli": true,
 	// Modern dev tools and executors
 	"tsx": true, "ts-node-dev": true, "bun-types": true,
-	"@lhci/cli": true,
+	"@lhci/cli": true, "esbuild-wasm": true,
 	// CRA default deps (used by react-scripts, never imported)
 	"react-scripts": true, "react-dev-utils": true,
 	"web-vitals": true,
+	// Rails / Hotwire ecosystem — used via importmaps, not direct require()
+	"@hotwired/stimulus": true, "@hotwired/turbo-rails": true,
+	"stimulus-use": true, "@popperjs/core": true,
+	"bootstrap": true, "bootstrap-icons": true,
+	"chart.js": true, "chartkick": true,
 	// State management / data fetching
 	"zustand": true, "jotai": true, "recoil": true,
 	"react-hook-form": true, "zod": true, "@hookform/resolvers": true,

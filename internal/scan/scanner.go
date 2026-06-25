@@ -79,7 +79,7 @@ func (s *Scanner) Scan(ctx context.Context, opts *ScanOptions) (*Findings, error
 			continue
 		}
 		for _, f := range ruleFindings {
-			findings.Add(f.Severity, f.Category, f.RuleID, f.File, f.Line, f.Message)
+			findings.AddWithConfidence(f.Severity, f.Category, f.RuleID, f.File, f.Line, f.Message, f.Confidence)
 		}
 	}
 

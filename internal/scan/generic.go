@@ -249,18 +249,23 @@ func (r *GenericHardcodedSecretRule) Detect(ctx context.Context, scanRoot string
 // verifyHardcodedSecret adjusts confidence for hardcoded secret findings.
 // Lowers confidence when the value is an env var reference or the file is a fixture.
 func verifyHardcodedSecret(f *Finding, allLines []string, lineIdx int, filePath string) {
-	// Lower confidence if file is in test/fixture/spec directories
-	if strings.Contains(filePath, "/test") || strings.Contains(filePath, "/spec") ||
-		strings.Contains(filePath, "/fixtures") || strings.Contains(filePath, "/mock") ||
-		strings.Contains(filePath, "/example") || strings.Contains(filePath, "docker-compose") {
-		f.Confidence = 0.4
+	// Check if file is in test/fixture/spec/seed directories (both leading / and relative)
+	testDir := func(dir string) bool {
+		return strings.HasPrefix(filePath, dir+"/") || strings.Contains(filePath, "/"+dir+"/")
+	}
+	if testDir("test") || testDir("spec") || testDir("fixtures") ||
+		testDir("mock") || testDir("example") || testDir("seed") || testDir("seeds") ||
+		strings.Contains(filePath, "docker-compose") {
+		f.Confidence = 0.2
 		return
 	}
-	// Lower confidence for minified or built JS bundles
+	// Lower confidence for minified or built JS bundles, vendor/third-party, archive dirs
 	if strings.HasSuffix(filePath, ".min.js") ||
-		strings.Contains(filePath, "/assets/builds/") ||
-		strings.Contains(filePath, "/dist/") ||
-		strings.Contains(filePath, "/build/") {
+		strings.Contains(filePath, "/assets/") ||
+		strings.Contains(filePath, "/public/assets/") ||
+		testDir("dist") || testDir("build") || testDir("vendor") ||
+		strings.Contains(filePath, "/_archive") ||
+		strings.Contains(filePath, "node_modules/") {
 		f.Confidence = 0.3
 		return
 	}
