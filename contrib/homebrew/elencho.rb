@@ -9,21 +9,21 @@ class Elencho < Formula
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.1/elencho-darwin-arm64"
-      sha256 "f28d7bb32f4e886a820bb02fd10c0d7c69561884b32519baab8dafbacd7dffde"
+      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.2/elencho-darwin-arm64"
+      sha256 "79f528c3ea35312beb603a5307c9b22b966dd328eda2a4b0250c277ec2027292"
     else
-      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.1/elencho-darwin-amd64"
-      sha256 "af2495071bb7156809eba8793c1c4fa0905f656b681eb35d153f7d918202449b"
+      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.2/elencho-darwin-amd64"
+      sha256 "40c752e452abacbf637b930ca676e68368bd5e181edda5dc321c3c7a098c0a93"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.1/elencho-linux-arm64"
-      sha256 "0007efe11d5462be89b3f0536cbc65f9c7c2ece1ea6d4b9bf0532ad570cb9340"
+      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.2/elencho-linux-arm64"
+      sha256 "a1dc754372c9ff78aaa36216b367fc3bd7ee696d3a8dc0813f399768ed271c4d"
     else
-      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.1/elencho-linux-amd64"
-      sha256 "09b739701833943379733a792f7ee7bfd68d38f22978a21c461040a3847becf9"
+      url "https://github.com/lukemcqueen/elencho/releases/download/v0.4.2/elencho-linux-amd64"
+      sha256 "e72efa58eeb0b112dc96fa35661737a6b72b6b021fe278f144671e6ead4a8dfe"
     end
   end
 
