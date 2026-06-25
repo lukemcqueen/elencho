@@ -183,7 +183,7 @@ type GenericHardcodedSecretRule struct {
 
 var credPat = regexp.MustCompile(`(?i)(api[_-]?key|apikey|secret[_-]?key|password|passwd|pwd|token)\s*[:=]\s*["']([^"']+)`)
 
-var credSkipWords = []string{"placeholder", "your-", "<YOUR", "your-api", "example", "changeme", "test_", "xxxx", "fake", "dummy", "staging", "demo", "${", "$("}
+var credSkipWords = []string{"placeholder", "your-", "<YOUR", "your-api", "example", "changeme", "test_", "xxxx", "fake", "dummy", "staging", "demo", "${", "$(", "todo", "fixme", "sample", "template", "default", "changethis", "change_me", "not_a_real", "not_real", "my_", "your_", "tbd", "TBD", "xxx", "REPLACE", "replace_", "replace-"}
 
 var credExts = []string{".js", ".ts", ".py", ".rb", ".go", ".yml", ".yaml", ".json"}
 

@@ -190,6 +190,15 @@ var dynamicImportPats = []*regexp.Regexp{
 	regexp.MustCompile(`importlib\.__import__\(`),
 }
 
+// venvDirs lists directory path substrings for Python venvs.
+// Files inside get lower confidence — dynamic imports there are
+// almost always legitimate (SQLAlchemy dialect loaders, etc.)
+var venvDirs = []string{
+	".venv/", "venv/", ".venv.bak/", "venv.bak/",
+	".testvenv/", "testvenv/", ".tox/", "tox/",
+	"lib/python", "site-packages/",
+}
+
 func (r *PythonDynamicImportRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
 	var findings []Finding
 	for _, f := range files {
@@ -219,6 +228,20 @@ func (r *PythonDynamicImportRule) Detect(ctx context.Context, scanRoot string, f
 		}
 	}
 	return findings, nil
+}
+
+// Verify implements the Verifier interface for python-dynamic-import.
+// Lowers confidence for files in known virtual environment directories
+// where dynamic imports are almost always legitimate framework patterns
+// (SQLAlchemy dialect loaders, Alembic env.py, pytest plugins, etc.).
+func (r *PythonDynamicImportRule) Verify(_ context.Context, _ string, finding *Finding, _ []Finding) error {
+	for _, venv := range venvDirs {
+		if strings.Contains(finding.File, venv) {
+			finding.Confidence = 0.3
+			return nil
+		}
+	}
+	return nil
 }
 
 // ── Git dependencies in requirements.txt ──────────────────────────────────────

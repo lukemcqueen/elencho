@@ -40,6 +40,10 @@ var knownSafePhantomDeps = map[string]bool{
 	"sass": true, "less": true, "stylus": true, "cssnano": true,
 	"purgecss": true, "postcss-cli": true, "sass-loader": true,
 	"style-loader": true, "css-loader": true, "postcss-loader": true,
+	"clsx": true, "class-variance-authority": true, "tailwind-merge": true,
+	"tailwindcss-animate": true, "lucide-react": true,
+	// UI component libraries (imported by barrel/config, not direct require)
+	"recharts": true, "framer-motion": true,
 	// Testing
 	"jest": true, "vitest": true, "mocha": true, "chai": true,
 	"sinon": true, "cypress": true, "playwright": true,
@@ -48,7 +52,8 @@ var knownSafePhantomDeps = map[string]bool{
 	"supertest": true, "nock": true, "proxyquire": true,
 	"istanbul": true, "nyc": true, "xvfb-maybe": true,
 	"@testing-library/react": true, "@testing-library/jest-dom": true,
-	"@testing-library/user-event": true,
+	"@testing-library/user-event": true, "@testing-library/dom": true,
+	"jsdom": true, "happy-dom": true,
 	// Release / CI
 	"semantic-release": true, "release-it": true, "standard-version": true,
 	"changesets": true, "conventional-changelog": true,
@@ -70,6 +75,15 @@ var knownSafePhantomDeps = map[string]bool{
 	"create-react-app": true, "next": true, "nuxt": true,
 	"@nestjs/core": true, "@nestjs/cli": true,
 	"expo": true, "expo-cli": true,
+	// Modern dev tools and executors
+	"tsx": true, "ts-node-dev": true, "bun-types": true,
+	"@lhci/cli": true,
+	// CRA default deps (used by react-scripts, never imported)
+	"react-scripts": true, "react-dev-utils": true,
+	"web-vitals": true,
+	// State management / data fetching
+	"zustand": true, "jotai": true, "recoil": true,
+	"react-hook-form": true, "zod": true, "@hookform/resolvers": true,
 	// Side-effect / monkey-patch only (never imported by name)
 	"zone.js": true, "reflect-metadata": true, "source-map-support": true,
 	"core-js": true, "regenerator-runtime": true, "ts-polyfill": true,
@@ -104,6 +118,22 @@ var phantomPluginPrefixes = []string{
 	"@aws-sdk/",
 	"@azure/",
 	"@google-cloud/",
+	// UI framework component libraries (Radix UI, shadcn, MUI, etc.)
+	"@radix-ui/",
+	"@mui/", "@mui/icons-",
+	"@headlessui/", "@heroicons/",
+	"@hookform/",
+	"@tanstack/",
+	"@dnd-kit/",
+	"@floating-ui/",
+	"@next/", "next-",
+	"@remix-run/",
+	"@trpc/",
+	"@prisma/",
+	"@shadcn/",
+	// Testing & type packages
+	"@types/",
+	"@testing-library/",
 }
 
 func (r *NpmPhantomDependencyRule) Detect(ctx context.Context, scanRoot string, files []string) ([]Finding, error) {
