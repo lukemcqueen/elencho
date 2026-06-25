@@ -240,7 +240,3 @@ func humanSize(bytes int64) string {
 	}
 	return fmt.Sprintf("%dB", bytes)
 }
-
-func itoa(n int64) string {
-	return fmt.Sprintf("%d", n)
-}

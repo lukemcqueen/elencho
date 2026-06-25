@@ -12,8 +12,8 @@ import (
 type Format string
 
 const (
-	FormatText Format = "text"
-	FormatJSON Format = "json"
+	FormatText  Format = "text"
+	FormatJSON  Format = "json"
 	FormatSARIF Format = "sarif"
 )
 
@@ -25,7 +25,7 @@ type Report struct {
 
 // Summary contains aggregate statistics about the scan.
 type Summary struct {
-	TotalFindings      int            `json:"total_findings"`
+	TotalFindings     int            `json:"total_findings"`
 	BySeverity        map[string]int `json:"by_severity"`
 	ByCategory        map[string]int `json:"by_category"`
 	HasHighOrCritical bool           `json:"has_high_or_critical"`
@@ -45,7 +45,7 @@ func NewReport(findings *scan.Findings) *Report {
 	return &Report{
 		Findings: all,
 		Summary: Summary{
-			TotalFindings:      len(all),
+			TotalFindings:     len(all),
 			BySeverity:        bySev,
 			ByCategory:        byCat,
 			HasHighOrCritical: findings.HasHighOrCritical(),

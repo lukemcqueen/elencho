@@ -11,14 +11,14 @@ import (
 // SARIFReport represents a SARIF 2.1 format report.
 // This is a minimal implementation covering the fields we need.
 type SARIFReport struct {
-	Version string    `json:"version"`
-	Schema  string    `json:"$schema,omitempty"`
+	Version string     `json:"version"`
+	Schema  string     `json:"$schema,omitempty"`
 	Runs    []SARIFRun `json:"runs"`
 }
 
 type SARIFRun struct {
-	Tool    SARIFTool            `json:"tool"`
-	Results []SARIFResult        `json:"results"`
+	Tool       SARIFTool              `json:"tool"`
+	Results    []SARIFResult          `json:"results"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
 }
 
@@ -27,19 +27,19 @@ type SARIFTool struct {
 }
 
 type SARIFDriver struct {
-	Name            string          `json:"name"`
-	Version         string          `json:"version,omitempty"`
-	InformationURI string          `json:"informationUri,omitempty"`
-	Rules           []SARIFRule     `json:"rules,omitempty"`
+	Name           string      `json:"name"`
+	Version        string      `json:"version,omitempty"`
+	InformationURI string      `json:"informationUri,omitempty"`
+	Rules          []SARIFRule `json:"rules,omitempty"`
 }
 
 type SARIFRule struct {
-	ID              string              `json:"id"`
-	Name            string              `json:"name,omitempty"`
-	ShortDescription SARIFMessage       `json:"shortDescription,omitempty"`
-	FullDescription  SARIFMessage       `json:"fullDescription,omitempty"`
-	DefaultConfiguration SARIFConfiguration `json:"defaultConfiguration,omitempty"`
-	Properties      map[string]interface{} `json:"properties,omitempty"`
+	ID                   string                 `json:"id"`
+	Name                 string                 `json:"name,omitempty"`
+	ShortDescription     SARIFMessage           `json:"shortDescription,omitempty"`
+	FullDescription      SARIFMessage           `json:"fullDescription,omitempty"`
+	DefaultConfiguration SARIFConfiguration     `json:"defaultConfiguration,omitempty"`
+	Properties           map[string]interface{} `json:"properties,omitempty"`
 }
 
 type SARIFConfiguration struct {
@@ -47,10 +47,10 @@ type SARIFConfiguration struct {
 }
 
 type SARIFResult struct {
-	RuleID    string       `json:"ruleId"`
-	Level     string       `json:"level"`
-	Message   SARIFMessage `json:"message"`
-	Locations []SARIFLocation `json:"locations,omitempty"`
+	RuleID     string                 `json:"ruleId"`
+	Level      string                 `json:"level"`
+	Message    SARIFMessage           `json:"message"`
+	Locations  []SARIFLocation        `json:"locations,omitempty"`
 	Properties map[string]interface{} `json:"properties,omitempty"`
 }
 
@@ -192,8 +192,8 @@ func formatSARIF(report *Report) (string, error) {
 			},
 			Results: sarifResults,
 			Properties: map[string]interface{}{
-				"totalFindings":      report.Summary.TotalFindings,
-				"hasHighOrCritical":  report.Summary.HasHighOrCritical,
+				"totalFindings":     report.Summary.TotalFindings,
+				"hasHighOrCritical": report.Summary.HasHighOrCritical,
 			},
 		}},
 	}

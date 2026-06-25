@@ -38,7 +38,7 @@ type Finding struct {
 	File       string   `json:"file"`
 	Line       int      `json:"line"`
 	Message    string   `json:"message"`
-	Confidence float64  `json:"confidence"`          // 0.0 (probably FP) → 1.0 (definite finding)
+	Confidence float64  `json:"confidence"` // 0.0 (probably FP) → 1.0 (definite finding)
 	Suggestion string   `json:"suggestion,omitempty"`
 	FixCommand string   `json:"fix_command,omitempty"`
 }
@@ -71,12 +71,12 @@ func NewFindings() *Findings {
 // Add appends a finding to the collection.
 func (f *Findings) Add(sev Severity, category, ruleID, file string, line int, message string) {
 	f.items = append(f.items, Finding{
-		Severity: sev,
-		Category: category,
-		RuleID:   ruleID,
-		File:     file,
-		Line:     line,
-		Message:  message,
+		Severity:   sev,
+		Category:   category,
+		RuleID:     ruleID,
+		File:       file,
+		Line:       line,
+		Message:    message,
 		Confidence: 1.0,
 	})
 }
